@@ -274,6 +274,48 @@ td.num,th.num{text-align:right}
   @keyframes drift{to{transform:translateY(-50%) skewX(-10deg) translateX(-20%)}}
 }
 @media (prefers-reduced-motion:reduce){.countdown span,.p1:before,.qfb.show h3{animation:none}}
+
+/* Interaktif: combo + boost, peringkat live, tombol suara, feed host, analisis soal */
+.hud .rankbox{text-align:center}
+.hud .rankbox b{display:inline-block}
+.hud .rankbox span{font-size:13px;font-weight:800;color:var(--muted);margin-left:2px}
+.rankbox.up b{animation:rankUp .7s cubic-bezier(.2,1.6,.4,1)}
+.rankbox.down b{animation:rankDown .6s ease-out}
+@keyframes rankUp{0%{transform:translateY(12px) scale(.6);color:var(--ok)}60%{transform:scale(1.3);color:var(--ok)}}
+@keyframes rankDown{0%{transform:translateY(-10px);color:var(--bad)}}
+.combo{display:none;margin-top:6px;background:var(--coral);color:var(--white);font-family:var(--display);font-weight:900;font-size:12px;border-radius:999px;padding:2px 10px;width:max-content}
+.combo.show{display:block}
+.combo.pulse{animation:comboIn .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes comboIn{from{transform:scale(1.8) rotate(-6deg)}}
+.mute{pointer-events:auto;margin-top:6px;background:var(--tint);color:var(--cob);font-weight:800;font-size:11px;border-radius:999px;padding:3px 10px}
+.combo-tag{display:inline-block;margin-left:10px;background:var(--coral);color:var(--white);border-radius:999px;padding:2px 12px;font-size:15px;vertical-align:middle;transform:skewX(-8deg)}
+.speedlines{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;transition:opacity .3s;
+  background:repeating-conic-gradient(from 0deg at 50% 42%,transparent 0 2.6deg,rgba(255,255,255,.6) 2.6deg 3deg);
+  -webkit-mask:radial-gradient(circle at 50% 42%,transparent 34%,#000 80%);mask:radial-gradient(circle at 50% 42%,transparent 34%,#000 80%)}
+#p-game.boost .speedlines{opacity:.85;animation:lines .2s steps(2) infinite}
+@keyframes lines{50%{transform:rotate(1.2deg) scale(1.03)}}
+@media (max-width:420px){.hud .scorebox{padding:7px 11px}.pip{width:10px}}
+
+.race-main{display:flex;flex-direction:column;gap:12px;min-width:0}
+.feed{list-style:none;display:flex;flex-wrap:wrap;gap:8px;min-height:34px}
+.feed li{display:flex;align-items:center;gap:8px;background:var(--white);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px;animation:feedIn .45s cubic-bezier(.2,1.5,.4,1)}
+.feed li:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--k,var(--cob))}
+.feed li.ok{--k:var(--ok)}.feed li.bad{--k:var(--bad)}.feed li.combo{--k:var(--coral);background:var(--butter)}.feed li.fin{--k:var(--cob);background:var(--butter)}
+@keyframes feedIn{from{transform:translateY(-10px) scale(.8);opacity:0}}
+.streak{display:inline-block;margin-left:6px;background:var(--butter);color:var(--cob);border-radius:999px;padding:0 6px;font-family:var(--display);font-weight:900;font-size:11px;text-shadow:none;vertical-align:middle}
+.lanes.cols2 .streak{font-size:8px;padding:0 4px;margin-left:3px}
+
+.qstats{display:grid;gap:10px;margin-top:16px}
+.qs{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(120px,30%) 56px;gap:12px;align-items:center}
+.qs b{font-family:var(--display);font-weight:900;color:var(--cob)}
+.qs .qt{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qbar{height:12px;background:var(--tint);border-radius:99px;overflow:hidden}
+.qbar i{display:block;height:100%;background:var(--cob);border-radius:99px;transform-origin:left;animation:barIn .9s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(2.4s + var(--i) * 80ms)}
+.qs.hard b,.qs.hard em{color:var(--coral)}.qs.hard .qbar i{background:var(--coral)}
+.qs em{font-style:normal;font-family:var(--display);font-weight:900;text-align:right;font-variant-numeric:tabular-nums}
+@keyframes barIn{from{transform:scaleX(0)}}
+@media (max-width:700px){.qs{grid-template-columns:28px minmax(0,1fr) 52px}.qs .qbar{grid-column:2/4}}
+@media (prefers-reduced-motion:reduce){.rankbox.up b,.rankbox.down b,.combo.pulse,.feed li,.qbar i,#p-game.boost .speedlines{animation:none}}
 </style>
 </head>
 <body>
@@ -355,7 +397,7 @@ td.num,th.num{text-align:right}
   </div></div>
   <div class="wrap">
     <div class="race-grid">
-      <div class="stadium"><div class="lanes" id="hr-lanes"></div></div>
+      <div class="race-main"><div class="stadium"><div class="lanes" id="hr-lanes"></div></div><ol class="feed" id="hr-feed" aria-live="polite"></ol></div>
       <div class="card">
         <h2>Skor sementara</h2>
         <div class="rank-list" id="hr-rank"></div>
@@ -378,6 +420,7 @@ td.num,th.num{text-align:right}
   <div class="wrap">
     <div class="podium" id="hb-podium"></div>
     <div class="card"><table><thead><tr><th>#</th><th>Nama</th><th class="num">Benar</th><th class="num">Waktu</th><th class="num">Skor</th></tr></thead><tbody id="hb-table"></tbody></table></div>
+    <div class="card"><h2>analisis soal</h2><p class="muted" style="margin-top:4px">Persentase peserta yang menjawab benar. Soal paling sulit ditandai koral.</p><div class="qstats" id="hb-qstats"></div></div>
   </div>
 </section>
 
@@ -406,9 +449,11 @@ td.num,th.num{text-align:right}
 <!-- ============ PLAYER: GAME ============ -->
 <section class="screen" id="p-game">
   <canvas id="cv"></canvas>
+  <div class="speedlines" aria-hidden="true"></div>
   <div class="hud">
-    <div class="scorebox"><small>Skor</small><b id="hud-score">50</b><div class="pips" id="hud-pips"></div></div>
-    <div class="scorebox" style="text-align:right"><small>Gawang</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div></div>
+    <div class="scorebox"><small>Skor</small><b id="hud-score">50</b><div class="pips" id="hud-pips"></div><div class="combo" id="hud-combo"></div></div>
+    <div class="scorebox rankbox" id="hud-rankbox"><small>Peringkat</small><b id="hud-rank">-</b><span id="hud-of"></span></div>
+    <div class="scorebox" style="text-align:right"><small>Gawang</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div><button class="mute" id="hud-mute" type="button">suara on</button></div>
   </div>
   <div class="ctl-hint" id="ctl-hint">Geser kiri/kanan untuk pindah jalur dan hindari cone</div>
   <div class="banner" id="p-banner">Koneksi ke host terputus — mencoba lagi…</div>
@@ -531,6 +576,36 @@ function baseUrl(){ return location.href.split('#')[0].split('?')[0]; }
 function joinUrl(code){ return baseUrl() + '?join=' + code; }
 function store(kind, k, v){ try { const s = kind === 'l' ? localStorage : sessionStorage; if (v === undefined) return s.getItem(k); s.setItem(k, v); } catch (e) { return null; } }
 
+/* Efek suara disintesis langsung (tanpa file audio) + getar HP */
+const SFX = {
+  ctx: null, on: store('l', 'larikuis-sound') !== 'off',
+  unlock(){ try { this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)(); if (this.ctx.state === 'suspended') this.ctx.resume(); } catch (e) {} },
+  tone(f1, f2, dur, type, vol, at){
+    const c = this.ctx, t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  },
+  play(name){
+    const buzz = { ok: 30, bad: [70, 40, 70], cone: 40, fall: 140, combo: [20, 30, 20] }[name];
+    if (buzz && navigator.vibrate) try { navigator.vibrate(buzz); } catch (e) {}
+    if (!this.on || !this.ctx) return;
+    const T = (f1, f2, dur, type, vol, at = 0) => this.tone(f1, f2, dur, type, vol, at);
+    switch (name) {
+      case 'tick': T(660, 660, 0.12, 'square', 0.08); break;
+      case 'go': T(880, 1320, 0.35, 'square', 0.1); break;
+      case 'ok': [523, 659, 784].forEach((f, i) => T(f, f, 0.18, 'triangle', 0.16, i * 0.07)); break;
+      case 'combo': [659, 784, 988, 1319].forEach((f, i) => T(f, f, 0.16, 'square', 0.07, i * 0.06)); break;
+      case 'bad': T(220, 110, 0.35, 'sawtooth', 0.12); break;
+      case 'jump': T(300, 900, 0.25, 'triangle', 0.12); break;
+      case 'cone': T(140, 70, 0.15, 'square', 0.12); break;
+      case 'fall': T(400, 60, 0.5, 'sawtooth', 0.12); break;
+      case 'finish': [523, 659, 784, 1047, 784, 1047].forEach((f, i) => T(f, f, 0.22, 'triangle', 0.16, i * 0.11)); break;
+    }
+  }
+};
+const sfx = name => SFX.play(name);
+
 function countdown(ms, done){
   const el = $('#countdown');
   let n = Math.ceil(ms / 1000);
@@ -538,12 +613,13 @@ function countdown(ms, done){
   el.classList.add('show');
   const tick = () => {
     el.innerHTML = `<span>${n > 0 ? n : 'GO!'}</span>`;
+    if (n >= 0) sfx(n > 0 ? 'tick' : 'go');
     if (n < 0) { el.classList.remove('show'); done(); return; }
     n--; setTimeout(tick, n < 0 ? 600 : 1000);
   };
   // align first tick to remaining fraction
   const first = ms - (n - 1) * 1000;
-  el.innerHTML = `<span>${n}</span>`; n--;
+  el.innerHTML = `<span>${n}</span>`; sfx('tick'); n--;
   setTimeout(tick, Math.max(0, first));
 }
 
@@ -585,6 +661,14 @@ function hostCreate(){
 
 function lobbyList(){ return H.players.map(p => ({ name: p.name, color: p.color, online: p.online })); }
 function hostBroadcast(obj){ H.players.forEach(p => send(p.conn, obj)); }
+// peringkat dikirim ke tiap peserta setiap ada jawaban masuk
+function hostRanks(){ const r = ranking(); r.forEach((p, i) => send(p.conn, { t: 'rank', rank: i + 1, total: r.length })); }
+function hostFeed(text, kind){
+  const ol = $('#hr-feed'), li = document.createElement('li');
+  li.className = kind; li.textContent = text;
+  ol.prepend(li);
+  while (ol.children.length > 6) ol.lastChild.remove();
+}
 
 function hostOnData(conn, d){
   if (!d || typeof d !== 'object') return;
@@ -625,8 +709,13 @@ function hostOnData(conn, d){
     const ok = d.choice === QUESTIONS[qi].answer;
     p.answers[qi] = ok; p.answered++; if (ok) p.correct++;
     p.score += ok ? CONFIG.CORRECT : CONFIG.WRONG;
+    p.streak = ok ? (p.streak || 0) + 1 : 0;
     if (p.answered >= N && !p.done) { p.done = true; p.finishMs = Math.max(0, Date.now() - H.startAt); }
     send(conn, { t: 'result', qi, correct: ok, score: p.score });
+    hostFeed(`${p.name} ${ok ? 'lolos' : 'nyungsep di'} gawang ${qi + 1}`, ok ? 'ok' : 'bad');
+    if (ok && p.streak >= 3) hostFeed(`${p.name} combo ${p.streak}x`, 'combo');
+    if (p.done && p.answered === N) hostFeed(`${p.name} finish #${H.players.filter(x => x.done).length}`, 'fin');
+    hostRanks();
     renderHost();
     if (H.players.length && H.players.every(x => x.done)) { clearTimeout(H.ending); H.ending = setTimeout(hostEnd, 2500); }
   }
@@ -655,8 +744,10 @@ function hostStartGame(){
   if (!H.players.length) { toast('Belum ada peserta'); return; }
   H.phase = 'race';
   H.startAt = Date.now() + 4000;
-  H.players.forEach(p => { p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; });
+  H.players.forEach(p => { p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; p.streak = 0; });
   hostBroadcast({ t: 'start', startIn: 4000 });
+  hostRanks();
+  $('#hr-feed').innerHTML = '';
   $('#hr-code').textContent = H.code;
   $('#hr-lanes').innerHTML = ''; H.lanes.clear();
   $('#hr-rank').innerHTML = ''; H.rows.clear();
@@ -690,7 +781,7 @@ function hostEnd(){
 function hostAgain(){
   H.phase = 'lobby';
   H.players = H.players.filter(p => p.online);
-  H.players.forEach((p, i) => { p.color = color(i); p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; });
+  H.players.forEach((p, i) => { p.color = color(i); p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; p.streak = 0; });
   hostBroadcast({ t: 'reset', players: lobbyList() });
   show('host-lobby'); renderHost();
 }
@@ -728,7 +819,7 @@ function renderHost(){
       lanesEl.appendChild(el); H.lanes.set(p.pid, el);
     }
     el.classList.toggle('off', !p.online);
-    el.querySelector('.lane-name').textContent = p.name;
+    el.querySelector('.lane-name').innerHTML = esc(p.name) + (p.streak >= 2 ? `<b class="streak">${p.streak}x</b>` : '');
     const tok = el.querySelector('.tok');
     tok.style.setProperty('--c', p.color);
     tok.style.left = (2 + (p.answered / N) * 94) + '%';
@@ -768,6 +859,10 @@ function renderBoard(){
   const delay = { 0: 1.2, 1: .7, 2: .2 }; // juara 3 naik duluan, juara 1 terakhir
   $('#hb-podium').innerHTML = [1, 0, 2].filter(i => r[i]).map(i => `<div class="pod p${i + 1}" style="--d:${delay[i]}s"><div class="nm"><span class="dot" style="background:${r[i].color}"></span>${esc(r[i].name)}</div><div class="sc">${r[i].score}</div><div class="bar">${i + 1}</div></div>`).join('');
   $('#hb-table').innerHTML = r.map((p, i) => `<tr style="--i:${i}"><td><b>${i + 1}</b></td><td><span class="dot" style="background:${p.color};margin-right:8px"></span>${esc(p.name)}</td><td class="num">${p.correct}/${N}</td><td class="num">${p.done ? fmtTime(p.finishMs) : 'belum finish'}</td><td class="num"><b style="font-size:18px">${p.score}</b></td></tr>`).join('');
+  // analisis soal: % benar per soal, soal tersulit ditandai
+  const stats = QUESTIONS.map((q, i) => { const a = H.players.filter(p => p.answers[i] !== undefined); return { i, q, pct: a.length ? Math.round(a.filter(p => p.answers[i]).length / a.length * 100) : null }; });
+  const minPct = Math.min(...stats.filter(s => s.pct !== null).map(s => s.pct));
+  $('#hb-qstats').innerHTML = stats.map(s => `<div class="qs ${s.pct === minPct ? 'hard' : ''}" style="--i:${s.i}"><b>${s.i + 1}</b><span class="qt" title="${esc(s.q.q)}">${esc(s.q.q)}</span><div class="qbar"><i style="width:${s.pct || 0}%"></i></div><em>${s.pct === null ? '-' : s.pct + '%'}</em></div>`).join('');
   setTimeout(() => confetti($('#confetti')), 1300);
 }
 
@@ -906,6 +1001,10 @@ function playerOnData(d){
       P.qi = 0; P.score = CONFIG.START_SCORE; P.results = {}; P.outbox = [];
       startRace(d.startIn);
       break;
+    case 'rank': {
+      const prev = P.rank; P.rank = d.rank; P.total = d.total; updateRank(prev);
+      break;
+    }
     case 'result':
       P.outbox = P.outbox.filter(o => o.qi !== d.qi);
       if (d.qi === P.qi - 1 && typeof d.score === 'number') { P.score = d.score; updateHud(); }
@@ -930,7 +1029,7 @@ function renderWait(players){
 }
 
 function startRace(startIn){
-  P.phase = 'race';
+  P.phase = 'race'; P.streak = 0; P.rank = 0; P.total = 0; updateRank(0);
   $('#p-done').classList.remove('show');
   closeQuestion(true);
   show('p-game');
@@ -946,6 +1045,14 @@ function updateHud(){
   let h = '';
   for (let i = 0; i < N; i++) h += `<span class="pip ${P.results[i] === true ? 'ok' : P.results[i] === false ? 'bad' : ''}"></span>`;
   $('#hud-pips').innerHTML = h;
+  const cb = $('#hud-combo'); cb.textContent = 'combo ' + (P.streak || 0) + 'x'; cb.classList.toggle('show', P.streak >= 2);
+}
+
+function updateRank(prev){
+  $('#hud-rank').textContent = P.rank ? '#' + P.rank : '-';
+  $('#hud-of').textContent = P.total ? '/' + P.total : '';
+  const box = $('#hud-rankbox');
+  if (prev && P.rank !== prev) { box.classList.remove('up', 'down'); replay(box, P.rank < prev ? 'up' : 'down'); }
 }
 
 function floatDelta(text, ok){
@@ -991,13 +1098,16 @@ function answerQuestion(choice){
     else if (i === choice) b.classList.add('bad');
   });
   P.results[qi] = ok;
+  P.streak = ok ? (P.streak || 0) + 1 : 0;
   P.score += ok ? CONFIG.CORRECT : CONFIG.WRONG; // optimis; dikoreksi oleh host
   P.qi = qi + 1;
   const msg = { t: 'answer', qi, choice };
   P.outbox.push(msg); send(P.conn, msg);
   updateHud();
+  sfx(ok ? 'ok' : 'bad');
+  if (ok && P.streak >= 2) { replay($('#hud-combo'), 'pulse'); setTimeout(() => sfx('combo'), 220); }
   $('#q-fb-title').innerHTML = ok
-    ? `<span style="color:var(--ok)">Benar! +${CONFIG.CORRECT}</span>`
+    ? `<span style="color:var(--ok)">Benar! +${CONFIG.CORRECT}</span>` + (P.streak >= 2 ? `<span class="combo-tag">combo ${P.streak}x</span>` : '')
     : `<span style="color:var(--bad)">${choice < 0 ? 'Waktu habis' : 'Salah'} ${CONFIG.WRONG}</span>`;
   $('#q-fb-exp').textContent = q.exp || '';
   $('#q-fb').classList.add('show');
@@ -1015,6 +1125,7 @@ function continueRun(){
   closeQuestion();
   floatDelta(ok ? '+' + CONFIG.CORRECT : String(CONFIG.WRONG), ok);
   G.resume(ok);
+  if (ok && P.streak >= 2) G.boost(2.5, 1 + 0.08 * Math.min(P.streak, 5)); // combo = boost kecepatan sebentar
 }
 
 function closeQuestion(silent){
@@ -1054,7 +1165,7 @@ const G = {
   init(){
     if (!this._tried) { this._tried = true; if (window.THREE) try { this.setup(); } catch (e) { console.warn('3D tidak tersedia', e); } }
     this.resize();
-    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, lane: 0, x: 0, stumble: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true, _askQ: null, finT: 0, _fw: 0 });
+    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, lane: 0, x: 0, stumble: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true, _askQ: null, finT: 0, _fw: 0, boostT: 0, boostM: 1 });
     if (this.r) { this.paintRunner(); this.fin.visible = false; this.fx.forEach(m => m.visible = false); }
     this.spawnNext();
     cancelAnimationFrame(this.raf);
@@ -1082,7 +1193,8 @@ const G = {
     const h = $('#ctl-hint'); h.classList.add('show'); clearTimeout(this._hintT); this._hintT = setTimeout(() => h.classList.remove('show'), 4500);
   },
   resume(ok){ if (this.obs) this.obs.ok = ok; this.state = 'run'; this._pending = true; },
-  jumpNow(){ if (this.state !== 'run' || this.jump || this.fall) return false; this.jump = { t: -this.CROUCH }; return true; },
+  jumpNow(){ if (this.state !== 'run' || this.jump || this.fall) return false; this.jump = { t: -this.CROUCH }; sfx('jump'); return true; },
+  boost(sec, m){ this.boostT = sec; this.boostM = m; },
   moveLane(d){ if (this.state !== 'run' || this.fall) return false; this.lane = Math.max(-1, Math.min(1, this.lane + d)); return true; },
   stop(){ cancelAnimationFrame(this.raf); this.state = 'idle'; },
   loop(now){
@@ -1094,7 +1206,7 @@ const G = {
   // logika murni (tanpa three.js): kecepatan halus, berhenti sebelum rintangan, lompat / jatuh
   step(dt){
     const o = this.obs;
-    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED * (this.stumble > 0 ? 0.4 : 1)) : this.state === 'finished' ? (this.dist < this.finishX + 3 ? 2.5 : 0) : 0;
+    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED * (this.stumble > 0 ? 0.4 : 1) * (this.boostT > 0 ? this.boostM : 1)) : this.state === 'finished' ? (this.dist < this.finishX + 3 ? 2.5 : 0) : 0;
     if (this.state === 'finished') this.finT += dt;
     this.v += (target - this.v) * (1 - Math.exp(-(target > this.v ? 3 : 5) * dt));
     const before = this.dist;
@@ -1102,6 +1214,7 @@ const G = {
     this.x += (this.lane * this.LANE - this.x) * (1 - Math.exp(-12 * dt));
     if (this.fall && (this.fall.t += dt) >= this.FALL_T) this.fall = null;
     if (this.stumble > 0) this.stumble = Math.max(0, this.stumble - dt);
+    if (this.boostT > 0) this.boostT = Math.max(0, this.boostT - dt);
     this.land *= Math.exp(-9 * dt);
     const j = this.jump;
     if (j) {
@@ -1121,13 +1234,14 @@ const G = {
         // jawaban benar = lompat otomatis, waktunya diatur supaya puncak lompatan tepat di atas gawang
         if (o.ok && gap <= Math.max(0.8, this.v * (this.CROUCH + this.JUMP_T / 2))) this.jumpNow();
         // benar + sedang di udara = lolos; selain itu menabrak dan jatuh (poin tidak berubah)
-        if (!o.done && gap <= 0.3) { o.done = true; if (o.ok && this.jy > 0.8) this.burst(26); else { o.hit = true; this.jump = null; this.jy = 0; this.fall = { t: 0 }; } }
+        if (!o.done && gap <= 0.3) { o.done = true; if (o.ok && this.jy > 0.8) this.burst(26); else { o.hit = true; this.jump = null; this.jy = 0; this.fall = { t: 0 }; sfx('fall'); } }
         if (gap < -10) { this._pending = false; this.spawnNext(); }
       }
-      for (const c of this.cones) if (!c.hit && before < c.z && this.dist >= c.z && Math.abs(this.x - c.lane * this.LANE) < 0.6 && this.jy < 0.5) { c.hit = true; this.stumble = 0.6; }
+      for (const c of this.cones) if (!c.hit && before < c.z && this.dist >= c.z && Math.abs(this.x - c.lane * this.LANE) < 0.6 && this.jy < 0.5) { c.hit = true; this.stumble = 0.6; sfx('cone'); }
       if (this.finishX !== null && this.dist >= this.finishX) {
         this.state = 'finished'; this.finT = 0;
         [-2.1, 2.1].forEach(x => this.burst(60, x, 3.1, -this.finishX, 1.4)); // semburan dari kedua tiang gapura
+        sfx('finish');
         finishRace();
       }
     }
@@ -1408,7 +1522,9 @@ const G = {
     if (!idle && !fin) { C.position.z = goal.z; this.look.z = aim.z; } // z tanpa lag: framing tetap stabil saat ngebut
     this.shake *= Math.exp(-6 * dt); // guncangan kecil saat badan menghantam lintasan
     C.lookAt(this._v2.copy(this.look).add(this._v1.set((Math.random() - .5) * .3 * this.shake, (Math.random() - .5) * .3 * this.shake, 0)));
-    const fov = (portrait ? 66 : 52) + 6 * run;
+    const fov = (portrait ? 66 : 52) + 6 * run + 10 * Math.min(1, this.boostT);
+    const boosting = this.boostT > 0;
+    if (boosting !== this._b) { this._b = boosting; $('#p-game').classList.toggle('boost', boosting); }
     if (Math.abs(C.fov - fov) > .01) { C.fov = mix(C.fov, fov, 1 - Math.exp(-3 * dt)); C.updateProjectionMatrix(); }
     this.sun.position.set(-6, 11, rz + 4); this.sun.target.position.set(0, 0, rz - 2);
     this.r.render(this.scene, C);
@@ -1420,6 +1536,9 @@ const G = {
    ========================================================= */
 $('#btn-host').onclick = hostCreate;
 $('#btn-start').onclick = hostStartGame;
+document.addEventListener('pointerdown', () => SFX.unlock(), { passive: true }); // browser baru izinkan suara setelah ada sentuhan
+$('#hud-mute').textContent = 'suara ' + (SFX.on ? 'on' : 'off');
+$('#hud-mute').onclick = () => { SFX.on = !SFX.on; store('l', 'larikuis-sound', SFX.on ? 'on' : 'off'); $('#hud-mute').textContent = 'suara ' + (SFX.on ? 'on' : 'off'); };
 $('#btn-end').onclick = () => { if (confirm('Akhiri lomba sekarang dan tampilkan leaderboard?')) hostEnd(); };
 $('#btn-again').onclick = hostAgain;
 $('#btn-csv').onclick = downloadCsv;
