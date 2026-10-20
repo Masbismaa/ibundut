@@ -430,6 +430,7 @@ td.num,th.num{text-align:right}
     <div class="spinner"></div>
     <h2 id="pc-title">Menghubungkan…</h2>
     <p class="muted" id="pc-msg" style="margin-top:8px">Menghubungi host game</p>
+    <button class="btn" style="margin-top:16px;display:none" id="pc-retry">Coba lagi</button>
     <button class="btn ghost" style="margin-top:16px;display:none" id="pc-back">Kembali</button>
   </div>
 </section>
@@ -502,17 +503,20 @@ const CONFIG = {
   MAX_PLAYERS: 50,
   QUESTION_TIME: 40,   // detik per soal
   CONE: -2,            // poin kena cone
-  // Jika peserta beda jaringan & sering gagal konek, tambahkan TURN server di sini, contoh:
-  // { urls: 'turn:turn.contoh.com:3478', username: 'user', credential: 'pass' }
+  // Relay TURN untuk HP yang tidak bisa konek langsung (data seluler / Wi-Fi sekolah ketat).
+  // Isi dengan URL kredensial dari akun Metered gratis (dashboard > TURN Credentials), contoh:
+  // 'https://namaapp.metered.live/api/v1/turn/credentials?apiKey=XXXX'
+  TURN_API: '',
   ICE_SERVERS: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    // relay gratis Open Relay (metered.ca); ponytail: kuota/ketersediaan tidak dijamin, ganti dengan akun TURN sendiri kalau sering gagal
-    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+    { urls: 'stun:stun1.l.google.com:19302' }
   ]
 };
+// kredensial TURN diambil sekali saat halaman dibuka; kalau gagal, tetap jalan dengan STUN saja
+let ICE = CONFIG.ICE_SERVERS;
+const ICE_READY = !CONFIG.TURN_API ? Promise.resolve() : fetch(CONFIG.TURN_API).then(r => r.json())
+  .then(list => { if (Array.isArray(list) && list.length) ICE = CONFIG.ICE_SERVERS.concat(list); })
+  .catch(e => console.warn('TURN tidak tersedia', e));
 
 /* =========================================================
    BANK SOAL — answer = index jawaban benar (0 = opsi pertama)
@@ -576,7 +580,7 @@ function color(i){ return `hsl(${Math.round(i * 137.508) % 360} 80% 60%)`; }
 function shuffle(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function fmtTime(ms){ if (ms == null) return '—'; const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function send(conn, obj){ try { if (conn && conn.open) conn.send(obj); } catch (e) {} }
-function peerOpts(){ return { debug: 1, config: { iceServers: CONFIG.ICE_SERVERS } }; }
+function peerOpts(){ return { debug: 1, config: { iceServers: ICE } }; }
 function baseUrl(){ return location.href.split('#')[0].split('?')[0]; }
 function joinUrl(code){ return baseUrl() + '?join=' + code; }
 function store(kind, k, v){ try { const s = kind === 'l' ? localStorage : sessionStorage; if (v === undefined) return s.getItem(k); s.setItem(k, v); } catch (e) { return null; } }
@@ -633,11 +637,12 @@ function countdown(ms, done){
    ========================================================= */
 const H = { peer: null, code: '', players: [], phase: 'lobby', startAt: 0, lanes: new Map(), rows: new Map(), seen: new Set(), ending: null, clock: null };
 
-function hostCreate(){
+async function hostCreate(){
   show('host-lobby');
   $('#hl-status').textContent = 'Menyiapkan room…';
   if (location.protocol === 'file:') $('#hl-filewarn').style.display = 'block';
   if (typeof Peer === 'undefined') { $('#hl-status').textContent = 'Library jaringan gagal dimuat. Cek internet lalu muat ulang.'; return; }
+  await ICE_READY;
   if (H.peer) { try { H.peer.destroy(); } catch (e) {} }
   H.code = genCode();
   const peer = new Peer(PREFIX + H.code, peerOpts());
@@ -920,7 +925,7 @@ function downloadCsv(){
 const P = { peer: null, conn: null, code: '', pid: '', name: '', color: '#fbbf24', phase: 'join',
   qi: 0, score: CONFIG.START_SCORE, results: {}, outbox: [], joined: false, retryT: null };
 
-function playerJoin(code, name){
+async function playerJoin(code, name){
   P.code = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
   P.name = name;
   if (P.code.length < 4) { toast('Kode game tidak valid'); return; }
@@ -933,6 +938,7 @@ function playerJoin(code, name){
   pcStatus('Menghubungkan…', 'Menghubungi host game ' + P.code, false);
   show('p-connect');
   if (typeof Peer === 'undefined') { pcStatus('Gagal memuat', 'Library jaringan gagal dimuat. Cek koneksi internet lalu muat ulang.', true); return; }
+  await ICE_READY;
   if (P.peer) { try { P.peer.destroy(); } catch (e) {} }
   P.joined = false;
   const peer = new Peer(peerOpts());
@@ -960,10 +966,10 @@ function playerConnect(){
   conn.on('error', lost);
   setTimeout(() => {
     if (P.conn === conn && !conn.open) {
-      if (!P.joined) pcStatus('Tidak bisa terhubung', 'Koneksi ke host gagal. Pastikan HP dan host terhubung internet (lebih baik di Wi-Fi yang sama), lalu coba lagi.', true);
+      if (!P.joined) pcStatus('Tidak bisa terhubung', 'Jaringan HP ini tidak bisa tersambung ke laptop host. Coba ganti jaringan: kalau pakai Wi-Fi, pindah ke data seluler, atau sebaliknya. Kalau link dibuka dari WhatsApp/Instagram, buka ulang di Chrome atau Safari. Lalu tekan Coba lagi.', true);
       else scheduleRetry();
     }
-  }, 15000);
+  }, 25000);
 }
 
 function scheduleRetry(){
@@ -987,6 +993,7 @@ function setConn(on){
 function pcStatus(title, msg, failed){
   $('#pc-title').textContent = title; $('#pc-msg').textContent = msg;
   $('#pc-back').style.display = failed ? 'inline-block' : 'none';
+  $('#pc-retry').style.display = failed && P.code && P.name ? 'inline-block' : 'none';
   document.querySelector('#p-connect .spinner').style.display = failed ? 'none' : 'block';
 }
 
@@ -1583,6 +1590,7 @@ $('#btn-csv').onclick = downloadCsv;
 $('#btn-join').onclick = () => playerJoin($('#code-input').value.trim(), $('#name-input').value.trim());
 $('#name-input').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#code-input').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('#pc-retry').onclick = () => playerJoin(P.code, P.name);
 $('#pc-back').onclick = () => { if (P.peer) try { P.peer.destroy(); } catch (e) {} history.replaceState(null, '', baseUrl()); show('home'); };
 $('#q-next').onclick = continueRun;
 window.addEventListener('beforeunload', e => { if (H.peer && H.phase !== 'end' && H.players.length) { e.preventDefault(); e.returnValue = ''; } });
