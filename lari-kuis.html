@@ -329,19 +329,19 @@ td.num,th.num{text-align:right}
       <h1>lari<br>kuis</h1>
       <div class="facts">
         <div><b>10</b><span>gawang</span></div>
-        <div><b>20s</b><span>per soal</span></div>
+        <div><b>40s</b><span>per soal</span></div>
         <div><b>50</b><span>pelari maks</span></div>
       </div>
     </div>
   </header>
   <div class="tapes" aria-hidden="true">
     <div class="ticker t2"><div>gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / gas lari / jangan nyungsep / laporan keuangan / 50 pelari / satu juara / </div></div>
-    <div class="ticker t1"><div>jawab benar, lompat / salah, nyungsep / 10 gawang / 20 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 20 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 20 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 20 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 20 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 20 detik per soal / siapa paling cepat / </div></div>
+    <div class="ticker t1"><div>jawab benar, lompat / salah, nyungsep / 10 gawang / 40 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 40 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 40 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 40 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 40 detik per soal / siapa paling cepat / jawab benar, lompat / salah, nyungsep / 10 gawang / 40 detik per soal / siapa paling cepat / </div></div>
   </div>
   <div class="wrap home-grid">
     <div class="intro">
       <p class="lead wide">jawab benar, pelarimu terbang lewat gawang. salah, siap-siap nyungsep.</p>
-      <p>Semua mulai dari 50 poin. Benar +10, salah atau waktu habis −5. Yang finish duluan menang kalau skornya sama.</p>
+      <p>Semua mulai dari 50 poin. Benar +10, salah atau waktu habis −5, nabrak cone −2. Yang finish duluan menang kalau skornya sama.</p>
       <p class="muted">Untuk guru atau host: buka di laptop atau proyektor, peserta scan QR dari HP.</p>
     </div>
     <div class="card bib">
@@ -378,7 +378,7 @@ td.num,th.num{text-align:right}
           <button class="btn big" id="btn-start" disabled>Mulai lomba</button>
         </div>
         <div class="bibs" id="hl-players"><div class="empty">Belum ada pelari. Nama peserta muncul di sini begitu mereka gabung.</div></div>
-        <p class="muted" style="font-size:14px;padding-top:14px">10 gawang, 20 detik per soal. Urutan jawaban diacak untuk tiap peserta.</p>
+        <p class="muted" style="font-size:14px;padding-top:14px">10 gawang, 40 detik per soal. Urutan jawaban diacak untuk tiap peserta.</p>
       </div>
     </div>
   </div>
@@ -455,11 +455,11 @@ td.num,th.num{text-align:right}
     <div class="scorebox rankbox" id="hud-rankbox"><small>Peringkat</small><b id="hud-rank">-</b><span id="hud-of"></span></div>
     <div class="scorebox" style="text-align:right"><small>Gawang</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div><button class="mute" id="hud-mute" type="button">suara on</button></div>
   </div>
-  <div class="ctl-hint" id="ctl-hint">Geser kiri/kanan untuk pindah jalur dan hindari cone</div>
+  <div class="ctl-hint" id="ctl-hint">Geser kiri/kanan untuk hindari cone, nabrak = −2 poin</div>
   <div class="banner" id="p-banner">Koneksi ke host terputus — mencoba lagi…</div>
 
   <div class="qsheet" id="qsheet">
-    <div class="qhead"><span id="q-num">Soal 1 dari 10</span><span id="q-time">20s</span></div>
+    <div class="qhead"><span id="q-num">Soal 1 dari 10</span><span id="q-time">40s</span></div>
     <div class="qtimer"><div id="q-bar"></div></div>
     <div class="qtext" id="q-text"></div>
     <div class="qopts" id="q-opts"></div>
@@ -500,12 +500,17 @@ const CONFIG = {
   CORRECT: 10,         // poin jawaban benar
   WRONG: -5,           // poin jawaban salah / waktu habis
   MAX_PLAYERS: 50,
-  QUESTION_TIME: 20,   // detik per soal
+  QUESTION_TIME: 40,   // detik per soal
+  CONE: -2,            // poin kena cone
   // Jika peserta beda jaringan & sering gagal konek, tambahkan TURN server di sini, contoh:
   // { urls: 'turn:turn.contoh.com:3478', username: 'user', credential: 'pass' }
   ICE_SERVERS: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
+    { urls: 'stun:stun1.l.google.com:19302' },
+    // relay gratis Open Relay (metered.ca); ponytail: kuota/ketersediaan tidak dijamin, ganti dengan akun TURN sendiri kalau sering gagal
+    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
   ]
 };
 
@@ -677,13 +682,18 @@ function hostOnData(conn, d){
     let name = String(d.name || '').trim().slice(0, 20) || 'Peserta';
     if (!pid) return;
     let p = H.players.find(x => x.pid === pid);
+    // keluar lalu masuk lagi (tab/browser lain, pid baru) dengan nama sama = orang yang sama, lanjutkan progresnya
+    const same = !p && H.players.find(x => x.name.toLowerCase() === name.toLowerCase());
+    if (same) {
+      const old = same.conn;
+      if (old && old !== conn) { send(old, { t: 'kicked' }); setTimeout(() => { try { old.close(); } catch (e) {} }, 600); }
+      same.pid = pid; p = same;
+    }
     if (p) {
       if (p.conn && p.conn !== conn) { try { p.conn.close(); } catch (e) {} }
       p.conn = conn; p.online = true; clearTimeout(p.dropT);
     } else {
       if (H.players.length >= CONFIG.MAX_PLAYERS) { send(conn, { t: 'full' }); setTimeout(() => { try { conn.close(); } catch (e) {} }, 800); return; }
-      const base = name; let k = 2;
-      while (H.players.some(x => x.name.toLowerCase() === name.toLowerCase())) name = base + ' ' + (k++);
       p = { pid, name, conn, online: true, score: CONFIG.START_SCORE, answers: {}, answered: 0, correct: 0, done: false, finishMs: null, color: color(H.players.length) };
       H.players.push(p);
     }
@@ -701,6 +711,14 @@ function hostOnData(conn, d){
   }
   const p = H.players.find(x => x.pid === conn._pid);
   if (!p) return;
+  if (d.t === 'hit') {
+    if (H.phase !== 'race') return;
+    const id = String(d.id || '').slice(0, 24);
+    p.hits = p.hits || {};
+    if (id && !p.hits[id] && Object.keys(p.hits).length < 300) { p.hits[id] = 1; p.score += CONFIG.CONE; hostRanks(); renderHost(); }
+    send(conn, { t: 'hitok', id, score: p.score });
+    return;
+  }
   if (d.t === 'answer') {
     if (H.phase !== 'race') return;
     const qi = d.qi | 0;
@@ -744,7 +762,7 @@ function hostStartGame(){
   if (!H.players.length) { toast('Belum ada peserta'); return; }
   H.phase = 'race';
   H.startAt = Date.now() + 4000;
-  H.players.forEach(p => { p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; p.streak = 0; });
+  H.players.forEach(p => { p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; p.streak = 0; p.hits = {}; });
   hostBroadcast({ t: 'start', startIn: 4000 });
   hostRanks();
   $('#hr-feed').innerHTML = '';
@@ -781,7 +799,7 @@ function hostEnd(){
 function hostAgain(){
   H.phase = 'lobby';
   H.players = H.players.filter(p => p.online);
-  H.players.forEach((p, i) => { p.color = color(i); p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; p.streak = 0; });
+  H.players.forEach((p, i) => { p.color = color(i); p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; p.streak = 0; p.hits = {}; });
   hostBroadcast({ t: 'reset', players: lobbyList() });
   show('host-lobby'); renderHost();
 }
@@ -908,8 +926,9 @@ function playerJoin(code, name){
   if (P.code.length < 4) { toast('Kode game tidak valid'); return; }
   if (!name) { toast('Isi nama dulu'); $('#name-input').focus(); return; }
   store('l', 'larikuis-name', name);
-  P.pid = store('s', 'larikuis-pid-' + P.code) || rid();
-  store('s', 'larikuis-pid-' + P.code, P.pid);
+  P.pid = store('l', 'larikuis-pid-' + P.code) || rid();
+  store('l', 'larikuis-pid-' + P.code, P.pid);
+  P.kicked = false;
   history.replaceState(null, '', '?join=' + P.code);
   pcStatus('Menghubungkan…', 'Menghubungi host game ' + P.code, false);
   show('p-connect');
@@ -936,7 +955,7 @@ function playerConnect(){
   P.conn = conn;
   conn.on('open', () => { setConn(true); send(conn, { t: 'join', pid: P.pid, name: P.name }); });
   conn.on('data', playerOnData);
-  const lost = () => { if (P.conn === conn) { setConn(false); scheduleRetry(); } };
+  const lost = () => { if (P.conn === conn && !P.kicked) { setConn(false); scheduleRetry(); } };
   conn.on('close', lost);
   conn.on('error', lost);
   setTimeout(() => {
@@ -1005,6 +1024,16 @@ function playerOnData(d){
       const prev = P.rank; P.rank = d.rank; P.total = d.total; updateRank(prev);
       break;
     }
+    case 'hitok':
+      P.outbox = P.outbox.filter(o => o.id !== d.id);
+      if (typeof d.score === 'number') { P.score = d.score; updateHud(); }
+      break;
+    case 'kicked':
+      P.kicked = true; P.joined = false; clearTimeout(P.retryT);
+      try { P.peer.destroy(); } catch (e) {}
+      G.stop(); closeQuestion(true);
+      pcStatus('Kamu masuk dari perangkat lain', 'Nama ini baru saja dipakai masuk dari HP atau tab lain, jadi sambungan di sini ditutup.', true); show('p-connect');
+      break;
     case 'result':
       P.outbox = P.outbox.filter(o => o.qi !== d.qi);
       if (d.qi === P.qi - 1 && typeof d.score === 'number') { P.score = d.score; updateHud(); }
@@ -1053,6 +1082,15 @@ function updateRank(prev){
   $('#hud-of').textContent = P.total ? '/' + P.total : '';
   const box = $('#hud-rankbox');
   if (prev && P.rank !== prev) { box.classList.remove('up', 'down'); replay(box, P.rank < prev ? 'up' : 'down'); }
+}
+
+// cone tertabrak: -2 poin; id acak supaya kiriman ulang saat reconnect tidak terhitung dua kali
+function coneHit(){
+  if (P.phase !== 'race') return;
+  P.score += CONFIG.CONE;
+  const msg = { t: 'hit', id: rid().slice(0, 16) };
+  P.outbox.push(msg); send(P.conn, msg);
+  floatDelta(String(CONFIG.CONE), false); updateHud();
 }
 
 function floatDelta(text, ok){
@@ -1112,7 +1150,7 @@ function answerQuestion(choice){
   $('#q-fb-exp').textContent = q.exp || '';
   $('#q-fb').classList.add('show');
   setTimeout(() => $('#q-fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-  let n = 8;
+  let n = 12;
   const nb = $('#q-next');
   nb.textContent = `Lanjut lari (${n})`;
   Q.auto = setInterval(() => { n--; nb.textContent = `Lanjut lari (${n})`; if (n <= 0) continueRun(); }, 1000);
@@ -1158,7 +1196,7 @@ function showPlayerBoard(b){
    RUNNER 3D (three.js) — logika lari tetap jalan walau WebGL gagal
    ========================================================= */
 const G = {
-  SPEED: 9, GAP: 34, STOP: 12, JUMP_T: 0.72, JUMP_H: 1.35, CROUCH: 0.1, FALL_T: 1.6, LANE: 1.2,
+  SPEED: 9, GAP: 70, STOP: 12, JUMP_T: 0.72, JUMP_H: 1.35, CROUCH: 0.1, FALL_T: 1.6, LANE: 1.2,
   state: 'idle', dist: 0, v: 0, t: 0, ph: 0, jy: 0, raf: 0, last: 0, lane: 0, x: 0, stumble: 0, cones: [],
   obs: null, finishX: null, jump: null, fall: null, land: 0, cheer: 0, shake: 0, r: null,
 
@@ -1173,11 +1211,11 @@ const G = {
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
   spawnNext(){
-    // 3 baris cone di depan; tiap baris menutup 1–2 jalur, selalu ada 1 jalur kosong
+    // 5 baris cone di depan; tiap baris menutup 1–2 jalur, selalu ada 1 jalur kosong
     this.cones = [];
-    for (let r = 0; r < 3; r++) {
+    for (let r = 0; r < 5; r++) {
       const free = Math.floor(Math.random() * 3) - 1, lanes = [-1, 0, 1].filter(l => l !== free);
-      (Math.random() < .5 ? lanes : [lanes[Math.random() < .5 ? 0 : 1]]).forEach(lane => this.cones.push({ z: this.dist + 6 + r * 6, lane, hit: false, tip: 0 }));
+      (Math.random() < .5 ? lanes : [lanes[Math.random() < .5 ? 0 : 1]]).forEach(lane => this.cones.push({ z: this.dist + 10 + r * 9, lane, hit: false, tip: 0 }));
     }
     if (P.qi < N) {
       this.obs = { x: this.dist + this.GAP, qi: P.qi, asked: false, ok: false, jumped: false, hit: false, fall: 0 };
@@ -1237,7 +1275,7 @@ const G = {
         if (!o.done && gap <= 0.3) { o.done = true; if (o.ok && this.jy > 0.8) this.burst(26); else { o.hit = true; this.jump = null; this.jy = 0; this.fall = { t: 0 }; sfx('fall'); } }
         if (gap < -10) { this._pending = false; this.spawnNext(); }
       }
-      for (const c of this.cones) if (!c.hit && before < c.z && this.dist >= c.z && Math.abs(this.x - c.lane * this.LANE) < 0.6 && this.jy < 0.5) { c.hit = true; this.stumble = 0.6; sfx('cone'); }
+      for (const c of this.cones) if (!c.hit && before < c.z && this.dist >= c.z && Math.abs(this.x - c.lane * this.LANE) < 0.6 && this.jy < 0.5) { c.hit = true; this.stumble = 0.6; sfx('cone'); coneHit(); }
       if (this.finishX !== null && this.dist >= this.finishX) {
         this.state = 'finished'; this.finT = 0;
         [-2.1, 2.1].forEach(x => this.burst(60, x, 3.1, -this.finishX, 1.4)); // semburan dari kedua tiang gapura
@@ -1314,11 +1352,11 @@ const G = {
     this.marker = new T.Sprite(new T.SpriteMaterial({ map: this.tex(128, 128) }));
     scene.add(hurdle, this.marker);
 
-    // cone: pool 6 buah, diposisikan ulang tiap segmen
+    // cone: pool 10 buah, diposisikan ulang tiap segmen
     const orange = new T.MeshStandardMaterial({ color: '#f97316', roughness: .6 });
     const coneG = new T.ConeGeometry(.2, .55, 16), bandG = new T.CylinderGeometry(.11, .14, .09, 16), baseG = new T.BoxGeometry(.42, .04, .42);
     this.coneMesh = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       const g = new T.Group();
       [[coneG, orange, .3], [bandG, white, .32], [baseG, orange, .02]].forEach(([geo, mat, y]) => { const m = new T.Mesh(geo, mat); m.position.y = y; m.castShadow = true; g.add(m); });
       g.visible = false; scene.add(g); this.coneMesh.push(g);
@@ -1557,7 +1595,7 @@ window.addEventListener('beforeunload', e => { if (H.peer && H.phase !== 'end' &
   if (code) {
     $('#code-input').value = code;
     // muat ulang halaman di tengah game → langsung sambung lagi
-    if (savedName && store('s', 'larikuis-pid-' + code)) { playerJoin(code, savedName); return; }
+    if (savedName && store('l', 'larikuis-pid-' + code)) { playerJoin(code, savedName); return; }
     show('home'); setTimeout(() => $('#name-input').focus(), 100);
   } else show('home');
 })();
