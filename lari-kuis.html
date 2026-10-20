@@ -5,160 +5,178 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Lari Kuis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 :root{
-  --bg:#0b1020; --panel:#141b33; --panel2:#1c2547; --line:#2a3563;
-  --text:#eef2ff; --muted:#9aa6d1; --accent:#fbbf24; --accent2:#f97316;
-  --ok:#22c55e; --bad:#ef4444; --blue:#60a5fa;
+  --sky:#e9f1f6; --paper:#fff; --ink:#1c2733; --muted:#5b6773; --rule:#d3dbe1; --soft:#f3f6f8;
+  --track:#b04a35; --track-dk:#8c3a29; --grass:#3f7d3b; --ok:#2f8a3e; --bad:#c0392b;
+  --display:"Archivo",system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{background:var(--bg);color:var(--text);font-family:"Plus Jakarta Sans",system-ui,sans-serif;overflow-x:hidden}
-button{font:inherit;cursor:pointer;border:0}
+body{background:var(--sky);color:var(--ink);font-family:"Archivo",system-ui,sans-serif;font-size:16px;line-height:1.5;overflow-x:hidden}
+button{font:inherit;cursor:pointer;border:0;color:inherit}
 input{font:inherit}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .screen{display:none;min-height:100dvh}
 .screen.active{display:flex}
-.wrap{width:100%;max-width:1200px;margin:0 auto;padding:24px 16px}
-.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1203;font-weight:800;padding:14px 22px;border-radius:14px;font-size:17px;box-shadow:0 6px 0 #9a3412;transition:transform .08s,box-shadow .08s}
-.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #9a3412}
+.wrap{width:100%;max-width:1160px;margin:0 auto;padding:24px 16px}
+.btn{background:var(--track);color:#fff;font-weight:700;padding:13px 20px;border-radius:6px;font-size:16px;transition:background .15s,transform .1s}
+.btn:hover{background:var(--track-dk)}
+.btn:active{transform:translateY(1px)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.btn.ghost{background:var(--panel2);color:var(--text);box-shadow:0 6px 0 #0a0f22}
-.btn.small{padding:9px 14px;font-size:14px;border-radius:10px;box-shadow:0 4px 0 #9a3412}
-.btn.ghost.small{box-shadow:0 4px 0 #0a0f22}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px}
+.btn.ghost{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.btn.ghost:hover{background:var(--soft)}
+.btn.small{padding:9px 14px;font-size:14px}
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:22px}
 .muted{color:var(--muted)}
-h1{font-size:clamp(30px,6vw,56px);line-height:1.05;font-weight:800;letter-spacing:-.02em}
-h2{font-size:22px;font-weight:800}
-.field{display:block;margin-top:14px}
-.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
-.field input{width:100%;background:var(--bg);border:2px solid var(--line);color:var(--text);border-radius:12px;padding:13px 14px;font-size:18px;outline:none}
-.field input:focus{border-color:var(--accent)}
-#code-input{text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center;font-size:24px}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#111827;border:1px solid var(--line);padding:12px 18px;border-radius:12px;z-index:99;transition:transform .25s;max-width:90vw;text-align:center}
+h1,h2{font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;letter-spacing:-.01em;line-height:1.05}
+h2{font-size:26px}
+.field{display:block;margin-top:16px}
+.field span{display:block;font-size:14px;color:var(--muted);margin-bottom:4px;font-weight:600}
+.field input{width:100%;background:var(--paper);border:1.5px solid var(--rule);color:var(--ink);border-radius:6px;padding:12px 14px;font-size:17px;outline:none}
+.field input:focus{border-color:var(--ink)}
+#code-input{border:0;border-bottom:3px solid var(--ink);border-radius:0;padding:2px 0 4px;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900;font-size:68px;line-height:1;letter-spacing:.06em;text-align:center;text-transform:uppercase}
+#code-input::placeholder{color:#c9d1d7}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:6px;z-index:99;transition:transform .25s;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* HOME */
-#home{align-items:center;background:radial-gradient(1200px 600px at 80% -10%,#4c1d95 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#9a3412 0%,transparent 60%),var(--bg)}
-.home-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center}
-.tag{display:inline-block;background:rgba(251,191,36,.12);color:var(--accent);border:1px solid rgba(251,191,36,.35);padding:6px 12px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:16px}
-.rules{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.rule{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
-.rule b{display:block;font-size:24px}
-.rule small{color:var(--muted)}
-.or{display:flex;align-items:center;gap:10px;color:var(--muted);margin:18px 0;font-size:13px}
-.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
-@media (max-width:820px){.home-grid{grid-template-columns:1fr}.rules{grid-template-columns:repeat(3,1fr)}}
+/* HOME: lintasan atletik sebagai hero */
+#home{flex-direction:column}
+.track-hero{position:relative;color:#fff;overflow:hidden;
+  padding:clamp(36px,7vw,80px) 16px clamp(64px,9vw,110px) clamp(56px,10vw,140px);
+  background:repeating-linear-gradient(180deg,transparent 0 calc(25% - 3px),rgba(255,255,255,.8) calc(25% - 3px) 25%),var(--track)}
+.track-hero:before{content:"";position:absolute;left:clamp(26px,5vw,76px);top:0;bottom:0;width:7px;background:#fff}
+.track-hero h1{font-size:clamp(76px,18vw,228px);font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900;text-transform:uppercase;line-height:.82;letter-spacing:0}
+.track-hero p{font-size:clamp(19px,2.6vw,28px);font-weight:600;margin-top:12px}
+.home-grid>*{min-width:0}
+.home-grid{display:grid;grid-template-columns:1fr 400px;gap:48px;align-items:start;padding-top:0}
+.intro{padding-top:36px;max-width:56ch}
+.intro .lead{font-size:21px;line-height:1.45;font-weight:600}
+.intro p+p{margin-top:14px}
+.bib{margin-top:-72px;position:relative;padding:30px 26px 24px;border:1px solid var(--rule);border-radius:6px;box-shadow:0 3px 0 var(--rule);
+  background:
+    radial-gradient(circle at 15px 15px,#c4ccd2 0 4px,transparent 4.5px),
+    radial-gradient(circle at calc(100% - 15px) 15px,#c4ccd2 0 4px,transparent 4.5px),
+    radial-gradient(circle at 15px calc(100% - 15px),#c4ccd2 0 4px,transparent 4.5px),
+    radial-gradient(circle at calc(100% - 15px) calc(100% - 15px),#c4ccd2 0 4px,transparent 4.5px),
+    var(--paper)}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);margin:18px 0;font-size:14px}
+.or:before,.or:after{content:"";flex:1;height:1px;background:var(--rule)}
+@media (max-width:860px){.home-grid{grid-template-columns:1fr;gap:0}.bib{order:-1;margin-top:-48px}.intro{padding-top:28px}}
 
 /* HOST LOBBY */
 #host-lobby .wrap,#host-race .wrap,#host-board .wrap{display:flex;flex-direction:column;gap:18px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .lobby-grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
 .joinbox{text-align:center}
-.bigcode{font-size:56px;font-weight:800;letter-spacing:.18em;color:var(--accent);margin:6px 0 12px}
-#hl-qr{background:#fff;border-radius:16px;padding:14px;display:inline-block;min-width:268px;min-height:268px}
+.bigcode{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:88px;font-weight:900;letter-spacing:.06em;line-height:1;margin:6px 0 14px}
+#hl-qr{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px;display:inline-block;min-width:268px;min-height:268px}
 #hl-qr img,#hl-qr canvas{display:block}
 #hl-url{font-size:12px;word-break:break-all;margin-top:10px}
-.warn{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fecaca;padding:10px 12px;border-radius:12px;font-size:13px;margin-top:12px;text-align:left}
-.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;align-content:flex-start;min-height:120px}
-.chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:9px 14px;border-radius:99px;font-weight:700}
+.warn{background:#fdecea;border:1px solid #f3b7ae;color:#8c2a1d;padding:10px 12px;border-radius:6px;font-size:13px;margin-top:12px;text-align:left}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-content:flex-start;min-height:120px}
+.chip{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule);padding:7px 13px;border-radius:99px;font-weight:600}
 .chip.off{opacity:.4}
 .dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
-@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-.count{font-size:40px;font-weight:800}
+.count{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:52px;font-weight:900;line-height:1}
 @media (max-width:860px){.lobby-grid{grid-template-columns:1fr}}
 
 /* HOST RACE */
 .race-grid{display:grid;grid-template-columns:1fr 300px;gap:18px}
-.lanes{display:flex;flex-direction:column;gap:12px}
+.lanes{display:flex;flex-direction:column;gap:10px}
 .lane{display:grid;grid-template-columns:140px 1fr 56px;align-items:center;gap:10px;transition:opacity .3s}
 .lane.off{opacity:.4}
-.lane-name{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lane-track{position:relative;height:34px;border-radius:10px;background:
-  repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(251,191,36,.55) calc(10% - 2px) 10%),
-  linear-gradient(180deg,#9a3412,#7c2d12);border:1px solid #431407;overflow:visible}
-.lane-track:after{content:"";position:absolute;right:0;top:0;bottom:0;width:10px;background:repeating-conic-gradient(#fff 0 25%,#111 0 50%) 0 0/10px 10px;border-radius:0 10px 10px 0}
-.lane-runner{position:absolute;z-index:1;isolation:isolate;top:50%;transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.3,1.4,.5,1);font-size:24px;filter:drop-shadow(0 0 6px var(--c))}
+.lane-name{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane-track{position:relative;height:36px;border-radius:3px;
+  background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(255,255,255,.3) calc(10% - 2px) 10%),var(--track);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.85),inset 0 -2px 0 rgba(255,255,255,.85);overflow:visible}
+.lane-track:after{content:"";position:absolute;right:0;top:0;bottom:0;width:10px;background:repeating-conic-gradient(#fff 0 25%,var(--ink) 0 50%) 0 0/10px 10px}
+.lane-runner{position:absolute;z-index:1;isolation:isolate;top:50%;transform:translate(-50%,-50%);transition:left 1.2s cubic-bezier(.4,0,.2,1);font-size:22px}
 .lane-runner span{display:inline-block;transform:scaleX(-1)}
-.lane-runner i{position:absolute;inset:-4px -6px;border-radius:50%;background:var(--c);opacity:.55;z-index:-1}
-.lane-score{font-weight:800;text-align:right;font-size:18px}
+.lane-runner i{position:absolute;inset:-3px -5px;border-radius:50%;background:var(--c);border:2px solid #fff;z-index:-1}
+.lane-score{font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;text-align:right;font-size:22px}
 .rank-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-.rank-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--panel2)}
+.rank-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:6px;background:var(--soft)}
 .rank-row b{font-size:15px}
-.rank-row .n{color:var(--muted);font-weight:800}
-.pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);padding:8px 14px;border-radius:99px;font-weight:700}
+.rank-row .n{color:var(--muted);font-weight:700}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--rule);padding:7px 14px;border-radius:99px;font-weight:600}
 @media (max-width:860px){.race-grid{grid-template-columns:1fr}.lane{grid-template-columns:90px 1fr 44px}}
 
 /* COUNTDOWN */
-.countdown{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,8,20,.75);z-index:50;font-size:160px;font-weight:800;color:var(--accent);text-shadow:0 10px 0 #9a3412}
+.countdown{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(28,39,51,.5);z-index:50;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900;font-size:clamp(150px,32vw,280px);color:#fff}
 .countdown.show{display:flex}
 .countdown span{animation:cd .9s ease-out}
-@keyframes cd{from{transform:scale(1.8);opacity:0}30%{opacity:1}to{transform:scale(.9)}}
+@keyframes cd{from{transform:scale(1.5);opacity:0}30%{opacity:1}to{transform:scale(.95)}}
+@media (prefers-reduced-motion:reduce){.countdown span{animation:none}}
 
 /* BOARD */
-.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:10px 0 6px}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:10px 0 6px}
 .pod{width:180px;text-align:center}
-.pod .bar{border-radius:14px 14px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:12px;font-size:40px;font-weight:800;color:#1a1203}
-.pod .nm{font-weight:800;font-size:18px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pod .sc{color:var(--accent);font-weight:800;font-size:22px;margin-bottom:8px}
-.p1 .bar{height:180px;background:linear-gradient(#fde047,#f59e0b)}
-.p2 .bar{height:130px;background:linear-gradient(#e5e7eb,#9ca3af)}
-.p3 .bar{height:95px;background:linear-gradient(#fdba74,#c2410c)}
+.pod .bar{border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:10px;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:56px;font-weight:900;color:#fff}
+.pod .nm{font-weight:700;font-size:18px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod .sc{color:var(--track);font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;font-size:24px;margin-bottom:8px}
+.p1 .bar{height:180px;background:#d4a22a}
+.p2 .bar{height:130px;background:#9aa6b0}
+.p3 .bar{height:95px;background:#b2774a}
 table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
-th{color:var(--muted);font-size:13px;font-weight:700}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule)}
+th{color:var(--muted);font-size:14px;font-weight:600}
 td.num,th.num{text-align:right}
 
 /* PLAYER */
 .pcenter{align-items:center;justify-content:center;text-align:center;padding:24px 16px}
 .pcenter .card{width:100%;max-width:420px}
-.spinner{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
+.spinner{width:40px;height:40px;border:4px solid var(--rule);border-top-color:var(--track);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-.avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:34px;border:4px solid #fff}
+.avatar{width:76px;height:76px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:900;font-size:36px;color:#fff;border:4px solid #fff;box-shadow:0 0 0 1px var(--rule)}
 
-#p-game{flex-direction:column;position:relative;height:100dvh;overflow:hidden;background:#1e1b4b}
+#p-game{flex-direction:column;position:relative;height:100dvh;overflow:hidden;background:#cfe4f1}
 .hud{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;padding:max(12px,env(safe-area-inset-top)) 14px 0;pointer-events:none}
-.hud .scorebox{background:rgba(11,16,32,.75);border:1px solid var(--line);border-radius:14px;padding:8px 14px;backdrop-filter:blur(6px)}
-.hud .scorebox small{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em}
-.hud .scorebox b{font-size:28px;font-weight:800}
-.pips{display:flex;gap:4px;margin-top:8px}
-.pip{width:14px;height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
+.hud .scorebox{background:rgba(255,255,255,.9);border-radius:8px;padding:7px 14px}
+.hud .scorebox small{display:block;color:var(--muted);font-size:12px;font-weight:600}
+.hud .scorebox b{font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-size:32px;font-weight:800;line-height:1.05}
+.pips{display:flex;gap:4px;margin-top:6px}
+.pip{width:14px;height:7px;border-radius:2px;background:rgba(28,39,51,.15)}
 .pip.ok{background:var(--ok)}.pip.bad{background:var(--bad)}
-.conn{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:6px}
+.conn{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:6px}
 .conn i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .conn.off i{background:var(--bad)}
 #cv{display:block;width:100%;height:100%}
-.delta{position:absolute;left:24%;top:38%;font-size:44px;font-weight:800;z-index:6;pointer-events:none;animation:rise 1.2s forwards}
-@keyframes rise{from{transform:translateY(0);opacity:1}to{transform:translateY(-90px);opacity:0}}
+.delta{position:absolute;left:50%;top:34%;font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-size:60px;font-weight:900;z-index:6;pointer-events:none;text-shadow:0 2px 0 #fff;animation:rise 1.2s forwards}
+@keyframes rise{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-80px);opacity:0}}
 
-.qsheet{position:absolute;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 16px max(18px,env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.9,.3,1.1);max-height:88dvh;overflow-y:auto;box-shadow:0 -20px 40px rgba(0,0,0,.4)}
+.qsheet{position:absolute;left:0;right:0;bottom:0;z-index:10;background:var(--paper);border-radius:14px 14px 0 0;padding:18px 16px max(18px,env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .35s cubic-bezier(.2,.8,.2,1);max-height:88dvh;overflow-y:auto;box-shadow:0 -8px 30px rgba(28,39,51,.18)}
 .qsheet.show{transform:translateY(0)}
-.qhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.05em}
-.qtimer{height:6px;background:var(--line);border-radius:4px;margin:10px 0 14px;overflow:hidden}
-.qtimer div{height:100%;width:100%;background:linear-gradient(90deg,var(--ok),var(--accent));border-radius:4px}
-.qtext{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:14px}
-.qopts{display:flex;flex-direction:column;gap:10px}
-.opt{display:flex;align-items:flex-start;gap:12px;text-align:left;background:var(--panel2);color:var(--text);border:2px solid var(--line);border-radius:14px;padding:13px 14px;font-size:15px;font-weight:600;line-height:1.35;transition:border-color .15s,background .15s}
-.opt b{flex:none;width:28px;height:28px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent)}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:var(--muted)}
+.qtimer{height:6px;background:#e3e9ed;border-radius:3px;margin:10px 0 14px;overflow:hidden}
+.qtimer div{height:100%;width:100%;background:var(--track);border-radius:3px}
+.qtext{font-size:19px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.qopts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:flex-start;gap:12px;text-align:left;background:var(--soft);color:var(--ink);border:1.5px solid var(--rule);border-radius:8px;padding:12px 14px;font-size:15px;font-weight:500;line-height:1.4;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--ink)}
+.opt b{flex:none;width:26px;height:26px;border-radius:4px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
 .opt:active{transform:scale(.99)}
-.opt.ok{border-color:var(--ok);background:rgba(34,197,94,.15)}
-.opt.bad{border-color:var(--bad);background:rgba(239,68,68,.15)}
+.opt.ok{border-color:var(--ok);background:#e5f3e7}
+.opt.ok b{background:var(--ok)}
+.opt.bad{border-color:var(--bad);background:#fbe7e4}
+.opt.bad b{background:var(--bad)}
 .opt:disabled{cursor:default}
-.qfb{display:none;margin-top:14px;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.qfb{display:none;margin-top:14px;padding:14px;border-radius:8px;background:var(--soft)}
 .qfb.show{display:block}
 .qfb h3{font-size:20px;margin-bottom:6px}
-.qfb p{font-size:14px;color:var(--muted);line-height:1.5}
+.qfb p{font-size:15px;color:var(--muted);line-height:1.55}
 .qfb .btn{width:100%;margin-top:12px}
 
-.overlay{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(5,8,20,.72);padding:16px;text-align:center}
+.overlay{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(28,39,51,.5);padding:16px;text-align:center}
 .overlay.show{display:flex}
 .overlay .card{max-width:380px;width:100%}
-.big{font-size:54px;font-weight:800;color:var(--accent)}
-.myrank{font-size:72px;font-weight:800;color:var(--accent);line-height:1}
-.banner{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:var(--bad);color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;z-index:30;display:none}
+.big{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:84px;font-weight:900;line-height:1;margin:6px 0}
+.myrank{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:120px;font-weight:900;color:var(--track);line-height:.9}
+.banner{position:absolute;left:50%;top:76px;transform:translateX(-50%);background:var(--bad);color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;z-index:30;display:none}
 .banner.show{display:block}
 </style>
 </head>
@@ -166,25 +184,24 @@ td.num,th.num{text-align:right}
 
 <!-- ============ HOME ============ -->
 <section class="screen" id="home">
+  <header class="track-hero">
+    <h1>Lari Kuis</h1>
+    <p>Laporan Keuangan</p>
+  </header>
   <div class="wrap home-grid">
-    <div>
-      <span class="tag">🏃 Kuis Lari Rintangan · maks 20 peserta</span>
-      <h1>Lari Kuis<br><span style="color:var(--accent)">Laporan Keuangan</span></h1>
-      <p class="muted" style="margin-top:14px;font-size:17px;line-height:1.6">Setiap rintangan = satu pertanyaan tentang keputusan &amp; kegiatan perusahaan dalam laporan keuangan. Jawab benar untuk melompat, raih skor tertinggi!</p>
-      <div class="rules">
-        <div class="rule"><b>50</b><small>poin awal</small></div>
-        <div class="rule"><b style="color:var(--ok)">+10</b><small>jawaban benar</small></div>
-        <div class="rule"><b style="color:var(--bad)">−5</b><small>salah / waktu habis</small></div>
-      </div>
+    <div class="intro">
+      <p class="lead">Sepuluh gawang, sepuluh soal tentang keputusan dan kegiatan perusahaan di laporan keuangan.</p>
+      <p>Jawab benar dan pelarimu melompati gawang. Jawab salah, dia menabrak gawang dan jatuh. Semua mulai dengan 50 poin: benar +10, salah atau waktu habis −5.</p>
+      <p class="muted">Maksimal 20 pelari per game, 20 detik untuk tiap soal.</p>
     </div>
-    <div class="card">
-      <h2>Gabung sebagai peserta</h2>
+    <div class="bib">
+      <h2>Ikut lomba</h2>
       <label class="field"><span>Kode game</span><input id="code-input" maxlength="6" autocomplete="off" placeholder="ABC123"></label>
       <label class="field"><span>Nama kamu</span><input id="name-input" maxlength="20" autocomplete="off" placeholder="mis. Rina"></label>
-      <button class="btn" style="width:100%;margin-top:16px" id="btn-join">Gabung ▶</button>
+      <button class="btn" style="width:100%;margin-top:18px" id="btn-join">Gabung</button>
       <div class="or">atau</div>
-      <button class="btn ghost" style="width:100%" id="btn-host">🖥️ Buat game (layar host)</button>
-      <p class="muted" style="font-size:12px;margin-top:10px;text-align:center">Buka mode host di laptop/proyektor, peserta scan QR dari HP.</p>
+      <button class="btn ghost" style="width:100%" id="btn-host">Buat game di layar ini</button>
+      <p class="muted" style="font-size:13px;margin-top:10px;text-align:center">Untuk guru atau host: buka di laptop atau proyektor, peserta scan QR dari HP.</p>
     </div>
   </div>
 </section>
@@ -193,8 +210,8 @@ td.num,th.num{text-align:right}
 <section class="screen" id="host-lobby">
   <div class="wrap">
     <div class="topbar">
-      <h2>Lobi Game · Lari Kuis</h2>
-      <span class="pill" id="hl-status">⏳ Menyiapkan room…</span>
+      <h2>Lobi</h2>
+      <span class="pill" id="hl-status">Menyiapkan room…</span>
     </div>
     <div class="lobby-grid">
       <div class="card joinbox">
@@ -207,10 +224,10 @@ td.num,th.num{text-align:right}
       <div class="card" style="display:flex;flex-direction:column">
         <div class="topbar">
           <div><span class="count" id="hl-count">0</span><span class="muted" style="font-weight:700"> / 20 peserta</span></div>
-          <button class="btn" id="btn-start" disabled>Mulai Lomba 🏁</button>
+          <button class="btn" id="btn-start" disabled>Mulai lomba</button>
         </div>
         <div class="chips" id="hl-players"><span class="muted">Menunggu peserta bergabung…</span></div>
-        <p class="muted" style="font-size:13px;margin-top:auto;padding-top:14px">10 rintangan · 20 detik per soal · urutan jawaban diacak per peserta.</p>
+        <p class="muted" style="font-size:13px;margin-top:auto;padding-top:14px">10 gawang, 20 detik per soal. Urutan jawaban diacak untuk tiap peserta.</p>
       </div>
     </div>
   </div>
@@ -220,7 +237,7 @@ td.num,th.num{text-align:right}
 <section class="screen" id="host-race">
   <div class="wrap">
     <div class="topbar">
-      <h2>🏃 Lomba berlangsung</h2>
+      <h2>Lomba berlangsung</h2>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
         <span class="pill">Kode <b style="color:var(--accent);letter-spacing:.1em" id="hr-code"></b></span>
         <span class="pill" id="hr-done">0/0 finish</span>
@@ -241,7 +258,7 @@ td.num,th.num{text-align:right}
 <section class="screen" id="host-board">
   <div class="wrap">
     <div class="topbar">
-      <h2>🏆 Leaderboard</h2>
+      <h2>Leaderboard</h2>
       <div style="display:flex;gap:10px">
         <button class="btn ghost small" id="btn-csv">Unduh CSV</button>
         <button class="btn small" id="btn-again">Main lagi</button>
@@ -278,23 +295,22 @@ td.num,th.num{text-align:right}
 <section class="screen" id="p-game">
   <canvas id="cv"></canvas>
   <div class="hud">
-    <div class="scorebox"><small>SKOR</small><b id="hud-score">50</b><div class="pips" id="hud-pips"></div></div>
-    <div class="scorebox" style="text-align:right"><small>RINTANGAN</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div></div>
+    <div class="scorebox"><small>Skor</small><b id="hud-score">50</b><div class="pips" id="hud-pips"></div></div>
+    <div class="scorebox" style="text-align:right"><small>Gawang</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div></div>
   </div>
   <div class="banner" id="p-banner">Koneksi ke host terputus — mencoba lagi…</div>
 
   <div class="qsheet" id="qsheet">
-    <div class="qhead"><span id="q-num">RINTANGAN 1/10</span><span id="q-time">20s</span></div>
+    <div class="qhead"><span id="q-num">Soal 1 dari 10</span><span id="q-time">20s</span></div>
     <div class="qtimer"><div id="q-bar"></div></div>
     <div class="qtext" id="q-text"></div>
     <div class="qopts" id="q-opts"></div>
-    <div class="qfb" id="q-fb"><h3 id="q-fb-title"></h3><p id="q-fb-exp"></p><button class="btn" id="q-next">Lanjut lari ▶</button></div>
+    <div class="qfb" id="q-fb"><h3 id="q-fb-title"></h3><p id="q-fb-exp"></p><button class="btn" id="q-next">Lanjut lari</button></div>
   </div>
 
   <div class="overlay" id="p-done">
     <div class="card">
-      <div style="font-size:48px">🏁</div>
-      <h2>Finish!</h2>
+            <h2>Finish!</h2>
       <div class="big" id="pd-score">0</div>
       <p class="muted" id="pd-info"></p>
       <div class="spinner" style="width:28px;height:28px;border-width:3px;margin-top:16px"></div>
@@ -309,7 +325,7 @@ td.num,th.num{text-align:right}
     <div class="muted" style="font-weight:700">Peringkat kamu</div>
     <div class="myrank" id="pb-rank">#1</div>
     <div class="muted" id="pb-of" style="margin-bottom:6px"></div>
-    <div style="font-size:22px;font-weight:800"><span id="pb-score"></span> poin · <span id="pb-correct"></span>/10 benar</div>
+    <div style="font-size:22px;font-weight:800"><span id="pb-score"></span> poin , <span id="pb-correct"></span>/10 benar</div>
     <div class="rank-list" id="pb-top" style="margin-top:16px;text-align:left"></div>
   </div>
 </section>
@@ -425,16 +441,16 @@ const H = { peer: null, code: '', players: [], phase: 'lobby', startAt: 0, lanes
 
 function hostCreate(){
   show('host-lobby');
-  $('#hl-status').textContent = '⏳ Menyiapkan room…';
+  $('#hl-status').textContent = 'Menyiapkan room…';
   if (location.protocol === 'file:') $('#hl-filewarn').style.display = 'block';
-  if (typeof Peer === 'undefined') { $('#hl-status').textContent = '⚠️ Library jaringan gagal dimuat (cek internet)'; return; }
+  if (typeof Peer === 'undefined') { $('#hl-status').textContent = 'Library jaringan gagal dimuat. Cek internet lalu muat ulang.'; return; }
   if (H.peer) { try { H.peer.destroy(); } catch (e) {} }
   H.code = genCode();
   const peer = new Peer(PREFIX + H.code, peerOpts());
   H.peer = peer;
   peer.on('open', () => {
     $('#hl-code').textContent = H.code;
-    $('#hl-status').textContent = '🟢 Room siap';
+    $('#hl-status').textContent = 'Room siap';
     const url = joinUrl(H.code);
     $('#hl-url').textContent = url;
     const box = $('#hl-qr'); box.innerHTML = '';
@@ -446,7 +462,7 @@ function hostCreate(){
     conn.on('close', () => hostOnClose(conn));
     conn.on('error', () => hostOnClose(conn));
   });
-  peer.on('disconnected', () => { if (!peer.destroyed) { $('#hl-status').textContent = '🟠 Menyambung ulang…'; peer.reconnect(); } });
+  peer.on('disconnected', () => { if (!peer.destroyed) { $('#hl-status').textContent = 'Menyambung ulang…'; peer.reconnect(); } });
   peer.on('error', e => {
     if (e.type === 'unavailable-id') { hostCreate(); return; }
     if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type)) toast('Koneksi ke server sinyal terganggu, mencoba lagi…');
@@ -736,7 +752,7 @@ function playerOnData(d){
 
 function renderWait(players){
   $('#pw-name').textContent = P.name;
-  const av = $('#pw-avatar'); av.style.background = P.color;
+  const av = $('#pw-avatar'); av.style.background = P.color; av.textContent = (P.name[0] || '?').toUpperCase();
   $('#pw-count').textContent = players.length;
   $('#pw-players').innerHTML = players.map(p => `<span class="chip ${p.online ? '' : 'off'}" style="font-size:13px;padding:6px 11px"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</span>`).join('');
 }
@@ -772,7 +788,7 @@ let Q = { qi: -1, timer: null, auto: null, answered: false, start: 0 };
 function openQuestion(qi){
   const q = QUESTIONS[qi];
   Q = { qi, timer: null, auto: null, answered: false, start: performance.now() };
-  $('#q-num').textContent = `RINTANGAN ${qi + 1}/${N}`;
+  $('#q-num').textContent = `Soal ${qi + 1} dari ${N}`;
   $('#q-text').textContent = q.q;
   const order = shuffle(q.options.map((_, i) => i));
   $('#q-opts').innerHTML = order.map((oi, k) => `<button class="opt" data-i="${oi}"><b>${'ABCD'[k] || k + 1}</b><span>${esc(q.options[oi])}</span></button>`).join('');
@@ -816,8 +832,8 @@ function answerQuestion(choice){
   setTimeout(() => $('#q-fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
   let n = 8;
   const nb = $('#q-next');
-  nb.textContent = `Lanjut lari ▶ (${n})`;
-  Q.auto = setInterval(() => { n--; nb.textContent = `Lanjut lari ▶ (${n})`; if (n <= 0) continueRun(); }, 1000);
+  nb.textContent = `Lanjut lari (${n})`;
+  Q.auto = setInterval(() => { n--; nb.textContent = `Lanjut lari (${n})`; if (n <= 0) continueRun(); }, 1000);
   Q.ok = ok;
 }
 
@@ -858,14 +874,14 @@ function showPlayerBoard(b){
    RUNNER 3D (three.js) — logika lari tetap jalan walau WebGL gagal
    ========================================================= */
 const G = {
-  SPEED: 9, GAP: 24, STOP: 4, JUMP_T: 0.72, JUMP_H: 1.35, CROUCH: 0.1,
+  SPEED: 9, GAP: 24, STOP: 4, JUMP_T: 0.72, JUMP_H: 1.35, CROUCH: 0.1, FALL_T: 1.6,
   state: 'idle', dist: 0, v: 0, t: 0, ph: 0, jy: 0, raf: 0, last: 0,
-  obs: null, finishX: null, jump: null, trip: 0, land: 0, cheer: 0, r: null,
+  obs: null, finishX: null, jump: null, fall: null, land: 0, cheer: 0, shake: 0, r: null,
 
   init(){
     if (!this._tried) { this._tried = true; if (window.THREE) try { this.setup(); } catch (e) { console.warn('3D tidak tersedia', e); } }
     this.resize();
-    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, jump: null, trip: 0, land: 0, cheer: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true });
+    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true });
     if (this.r) { this.paintRunner(); this.fin.visible = false; this.fx.forEach(m => m.visible = false); }
     this.spawnNext();
     cancelAnimationFrame(this.raf);
@@ -890,13 +906,13 @@ const G = {
     if (this.r) this.render(dt);
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
-  // logika murni (tanpa three.js): kecepatan halus, berhenti sebelum rintangan, lompat / tersandung
+  // logika murni (tanpa three.js): kecepatan halus, berhenti sebelum rintangan, lompat / jatuh
   step(dt){
     const o = this.obs;
-    const target = this.state === 'run' ? this.SPEED * (this.trip > 0 ? 0.45 : 1) : this.state === 'finished' ? 2.5 : 0;
+    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED) : this.state === 'finished' ? 2.5 : 0;
     this.v += (target - this.v) * (1 - Math.exp(-(target > this.v ? 3 : 5) * dt));
     this.dist += this.v * dt;
-    if (this.trip > 0) this.trip = Math.max(0, this.trip - dt);
+    if (this.fall && (this.fall.t += dt) >= this.FALL_T) this.fall = null;
     this.land *= Math.exp(-9 * dt);
     const j = this.jump;
     if (j) {
@@ -913,7 +929,7 @@ const G = {
         const gap = o.x - this.dist;
         // tolakan diatur supaya puncak lompatan tepat di atas rintangan
         if (o.ok && !o.jumped && gap <= Math.max(0.8, this.v * (this.CROUCH + this.JUMP_T / 2))) { o.jumped = true; this.jump = { t: -this.CROUCH }; this.burst(26); }
-        if (!o.ok && !o.hit && gap <= 0.45) { o.hit = true; this.trip = 0.8; }
+        if (!o.ok && !o.hit && gap <= 0.45) { o.hit = true; this.fall = { t: 0 }; }
         if (gap < -10) { this._pending = false; this.spawnNext(); }
       }
       if (this.finishX !== null && this.dist >= this.finishX) { this.state = 'finished'; this.burst(70); finishRace(); }
@@ -927,27 +943,25 @@ const G = {
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     r.shadowMap.enabled = true; r.shadowMap.type = T.PCFSoftShadowMap;
     const scene = new T.Scene();
-    scene.background = this.tex(2, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#1e1b4b'); g.addColorStop(.38, '#6d28d9'); g.addColorStop(.62, '#fb923c'); g.addColorStop(1, '#fdba74'); c.fillStyle = g; c.fillRect(0, 0, w, h); });
-    scene.fog = new T.Fog('#f29a6a', 30, 140);
+    scene.background = this.tex(2, 256, (c, w, h) => { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#4f97d6'); g.addColorStop(.55, '#9ccbec'); g.addColorStop(1, '#d9ecf7'); c.fillStyle = g; c.fillRect(0, 0, w, h); });
+    scene.fog = new T.Fog('#cfe4f1', 40, 170);
     this.cam = new T.PerspectiveCamera(55, 1, 0.1, 400);
-    scene.add(new T.HemisphereLight('#ffd7b0', '#3b2a5a', 0.85));
-    const sun = this.sun = new T.DirectionalLight('#ffe0b0', 1.0);
+    scene.add(new T.HemisphereLight('#dcecff', '#4a6a35', 0.55));
+    const sun = this.sun = new T.DirectionalLight('#fff3e0', 0.85);
     sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
     Object.assign(sun.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 40 });
     sun.shadow.camera.updateProjectionMatrix();
     scene.add(sun, sun.target);
-    this.sunDisk = new T.Mesh(new T.SphereGeometry(12, 24, 16), new T.MeshBasicMaterial({ color: '#fde047', fog: false }));
-    scene.add(this.sunDisk);
 
     // tanah & lintasan (statis, cukup panjang untuk seluruh lomba)
     const trackTex = this.tex(128, 128, (c, w, h) => {
-      c.fillStyle = '#c2410c'; c.fillRect(0, 0, w, h);
+      c.fillStyle = '#9e4430'; c.fillRect(0, 0, w, h);
       for (let i = 0; i < 500; i++) { c.fillStyle = Math.random() < .5 ? 'rgba(0,0,0,.1)' : 'rgba(255,255,255,.08)'; c.fillRect(Math.random() * w, Math.random() * h, 2, 2); }
       c.fillStyle = '#fff'; [0, w / 3, w * 2 / 3, w - 3].forEach(x => c.fillRect(x, 0, 3, h));
     });
     trackTex.wrapS = trackTex.wrapT = T.RepeatWrapping; trackTex.repeat.set(1, LEN / W);
     const plane = (w, mat, y) => { const m = new T.Mesh(new T.PlaneGeometry(w, LEN), mat); m.rotation.x = -Math.PI / 2; m.position.set(0, y, 40 - LEN / 2); m.receiveShadow = true; scene.add(m); };
-    plane(400, new T.MeshStandardMaterial({ color: '#2f7d3a', roughness: 1 }), 0);
+    plane(400, new T.MeshStandardMaterial({ color: '#3f6f2e', roughness: 1 }), 0);
     plane(W, new T.MeshStandardMaterial({ map: trackTex, roughness: .9 }), 0.01);
 
     // pohon & gunung (instanced = 1 draw call)
@@ -961,13 +975,19 @@ const G = {
       m4.compose(p.set(x, 2.1 * k, z), q.setFromAxisAngle(up, Math.random() * 6), s.set(k, k * 1.3, k)); leaves.setMatrixAt(i, m4);
       if (leaves.setColorAt) leaves.setColorAt(i, col.setHSL(.28 + Math.random() * .1, .55, .25 + Math.random() * .12));
     }
-    const mtn = new T.InstancedMesh(new T.ConeGeometry(1, 1, 5), new T.MeshStandardMaterial({ color: '#5b21b6', flatShading: true }), 60);
+    // bukit rendah jauh di belakang, sebagian besar tertutup kabut
+    const hills = new T.InstancedMesh(new T.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), new T.MeshStandardMaterial({ color: '#7f9f78', roughness: 1 }), 60);
     for (let i = 0; i < 60; i++) {
-      const k = 25 + Math.random() * 35;
-      m4.compose(p.set((i % 2 ? 1 : -1) * (60 + Math.random() * 50), k / 2, 40 - i * 25), q.identity(), s.set(k * 1.6, k, k * 1.6)); mtn.setMatrixAt(i, m4);
+      const k = 6 + Math.random() * 8;
+      m4.compose(p.set((i % 2 ? 1 : -1) * (130 + Math.random() * 60), 0, 40 - i * 25), q.identity(), s.set(k * 5, k, k * 4)); hills.setMatrixAt(i, m4);
+    }
+    const clouds = new T.InstancedMesh(new T.SphereGeometry(1, 12, 8), new T.MeshLambertMaterial({ color: '#ffffff', emissive: '#d8e6f0' }), 90);
+    for (let i = 0; i < 90; i++) {
+      const c = Math.floor(i / 3), cx = (c % 2 ? 1 : -1) * (25 + (c * 37) % 90), cz = 20 - c * 50, k = 3 + Math.random() * 3;
+      m4.compose(p.set(cx + (i % 3 - 1) * k * 1.3, 32 + Math.random() * 3, cz + Math.random() * 3), q.identity(), s.set(k * 1.4, k * .6, k)); clouds.setMatrixAt(i, m4);
     }
     trunks.castShadow = leaves.castShadow = true;
-    [trunks, leaves, mtn].forEach(m => { m.frustumCulled = false; scene.add(m); }); // instance tersebar jauh dari origin
+    [trunks, leaves, hills, clouds].forEach(m => { m.frustumCulled = false; scene.add(m); }); // instance tersebar jauh dari origin
 
     // rintangan
     const white = new T.MeshStandardMaterial({ color: '#f1f5f9', roughness: .5 });
@@ -987,7 +1007,7 @@ const G = {
     const fin = this.fin = new T.Group();
     [-2.1, 2.1].forEach(x => { const m = new T.Mesh(new T.CylinderGeometry(.09, .09, 3.2, 8), white); m.position.set(x, 1.6, 0); m.castShadow = true; fin.add(m); });
     const checker = (c, w, h, sz) => { for (let i = 0; i < w / sz; i++) for (let j = 0; j < h / sz; j++) { c.fillStyle = (i + j) % 2 ? '#111' : '#fff'; c.fillRect(i * sz, j * sz, sz, sz); } };
-    const banTex = this.tex(256, 48, (c, w, h) => { checker(c, w, h, 12); c.fillStyle = '#111'; c.fillRect(60, 6, 136, 36); c.fillStyle = '#fbbf24'; c.font = '800 28px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FINISH', 128, 25); });
+    const banTex = this.tex(256, 48, (c, w, h) => { checker(c, w, h, 12); c.fillStyle = '#111'; c.fillRect(60, 6, 136, 36); c.fillStyle = '#fbbf24'; c.font = '800 28px "Archivo",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('FINISH', 128, 25); });
     const ban = new T.Mesh(new T.BoxGeometry(4.4, .8, .08), new T.MeshStandardMaterial({ map: banTex })); ban.position.y = 3; fin.add(ban);
     const line = new T.Mesh(new T.PlaneGeometry(W, .6), new T.MeshStandardMaterial({ map: this.tex(144, 24, (c, w, h) => checker(c, w, h, 12)) }));
     line.rotation.x = -Math.PI / 2; line.position.y = .02; fin.add(line);
@@ -1021,7 +1041,7 @@ const G = {
     part(hips, ball(.17), shorts, 0);
     part(torso, new T.CylinderGeometry(.2, .16, .55, 12), shirt, .3);
     const head = grp(torso, 0, .76);
-    part(head, ball(.15), skin, 0); part(head, new T.CylinderGeometry(.153, .153, .05, 14), shirt, .05);
+    part(head, ball(.15), skin, 0); part(head, new T.SphereGeometry(.158, 14, 8, 0, Math.PI * 2, 0, Math.PI * .55), M('#2b1d14'), .012).rotation.x = .35; part(head, new T.CylinderGeometry(.153, .153, .05, 14), shirt, .05);
     const legs = [-1, 1].map(sd => limb(hips, sd * .1, -.02, .075, .45, .46, skin, skin, (g, b) => { part(g, new T.BoxGeometry(.11, .07, .26), shoe, -b - .02).position.z = -.06; }));
     const arms = [-1, 1].map(sd => limb(torso, sd * .25, .52, .055, .28, .26, shirt, skin, (g, b) => part(g, ball(.055), skin, -b)));
     const label = new T.Sprite(new T.SpriteMaterial({ map: this.tex(512, 64), depthTest: false }));
@@ -1033,7 +1053,7 @@ const G = {
     m ? this.R.shirt.color.setHSL(m[1] / 360, m[2] / 100, m[3] / 100) : this.R.shirt.color.set(P.color);
     const t = this.R.label.material.map, c = t.image.getContext('2d');
     c.clearRect(0, 0, 512, 64);
-    c.font = '800 34px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '800 34px "Archivo",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.lineWidth = 8; c.strokeStyle = 'rgba(11,16,32,.85)'; c.strokeText(P.name, 256, 34);
     c.fillStyle = '#fff'; c.fillText(P.name, 256, 34);
     t.needsUpdate = true;
@@ -1043,8 +1063,8 @@ const G = {
     c.clearRect(0, 0, 128, 128);
     c.fillStyle = '#fbbf24'; c.beginPath(); c.moveTo(36, 30); c.arcTo(114, 30, 114, 120, 22); c.arcTo(114, 120, 14, 120, 22); c.arcTo(14, 120, 14, 30, 22); c.arcTo(14, 30, 114, 30, 22); c.fill();
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.fillStyle = '#1a1203'; c.font = '800 72px "Plus Jakarta Sans",sans-serif'; c.fillText('?', 64, 78);
-    c.font = '800 24px "Plus Jakarta Sans",sans-serif'; c.lineWidth = 6; c.strokeStyle = '#1a1203'; c.strokeText(`${qi + 1}/${N}`, 64, 14);
+    c.fillStyle = '#1a1203'; c.font = '800 72px "Archivo",sans-serif'; c.fillText('?', 64, 78);
+    c.font = '800 24px "Archivo",sans-serif'; c.lineWidth = 6; c.strokeStyle = '#1a1203'; c.strokeText(`${qi + 1}/${N}`, 64, 14);
     c.fillStyle = '#fff'; c.fillText(`${qi + 1}/${N}`, 64, 14);
     t.needsUpdate = true;
   },
@@ -1070,7 +1090,15 @@ const G = {
     const j = this.jump; let air = 0, crouch = 0;
     if (j) { const p = j.t / this.JUMP_T; crouch = j.t < 0 ? 1 + j.t / this.CROUCH : Math.max(0, 1 - j.t / 0.08); air = p > 0 ? Math.min(1, p * 5, (1 - p) * 5) : 0; }
     air = air * air * (3 - 2 * air);
-    const trip = this.trip > 0 ? Math.sin((1 - this.trip / 0.8) * Math.PI) : 0;
+    // jatuh: tersungkur ke depan (0–.35s), terbaring + memantul, lalu bangun lagi
+    const F = this.fall, ease = x => x * x * (3 - 2 * x); let down = 0, rise = 0, bump = 0;
+    if (F) {
+      const ft = F.t, up = (ft - .95) / (this.FALL_T - .95);
+      down = ft < .35 ? (ft / .35) ** 2 : ft < .95 ? 1 : 1 - ease(Math.min(1, up));
+      rise = ft > .95 ? Math.sin(Math.PI * Math.min(1, up)) : 0;
+      bump = ft > .35 && ft < .6 ? Math.sin((ft - .35) / .25 * Math.PI) : 0;
+      if (ft >= .35 && !F.shook) { F.shook = true; this.shake = 1; }
+    }
     this.cheer = mix(this.cheer, this.state === 'finished' ? 1 : 0, 1 - Math.exp(-4 * dt));
 
     // pose lari (rotasi +x = ayun ke depan), dicampur halus ke pose lompat gawang
@@ -1088,19 +1116,19 @@ const G = {
     sh[0] = mix(sh[0], -0.7, air); el[0] = mix(el[0], 1.2, air);
     for (let i = 0; i < 2; i++) {
       thigh[i] += 0.7 * crouch + 0.45 * this.land; knee[i] -= 1.3 * crouch + 0.9 * this.land; sh[i] -= 0.7 * crouch;
-      sh[i] = mix(sh[i], 2.2 + Math.sin(t * 22 + i * 3) * 0.5, trip);
+      thigh[i] = mix(thigh[i], 0.25, down) + 1.0 * rise; knee[i] = mix(knee[i], -0.5, down) - 1.6 * rise;
+      sh[i] = mix(mix(sh[i], 2.7 + Math.sin(i * 2) * 0.2, down), 0.6, rise); el[i] = mix(el[i], 0.25, down);
       sh[i] = mix(sh[i], 2.9, this.cheer); el[i] = mix(el[i], 0.15, this.cheer);
     }
-    const lean = -0.1 - 0.22 * run - 0.3 * crouch - 0.45 * air - 0.55 * trip + 0.12 * this.cheer;
+    const lean = -0.1 - 0.22 * run - 0.3 * crouch - 0.45 * air - 0.3 * rise + 0.12 * this.cheer;
     const bob = Math.abs(Math.cos(this.ph)) * 0.06 * run * (1 - air) + Math.abs(Math.sin(t * 9)) * 0.18 * this.cheer;
-    R.root.position.set(0, this.jy, rz);
-    R.root.rotation.z = Math.sin(t * 17) * 0.1 * trip;
-    R.hips.position.y = 0.95 - (0.18 * crouch + 0.16 * this.land + 0.1 * trip) + bob;
+    R.root.position.set(0, this.jy + 0.17 * down, rz);
+    R.root.rotation.x = -1.42 * down + 0.12 * bump;
+    R.hips.position.y = 0.95 - (0.18 * crouch + 0.16 * this.land + 0.28 * rise) + bob;
     R.torso.rotation.x = lean;
-    R.head.rotation.x = -lean * 0.6;
+    R.head.rotation.x = -lean * 0.6 + 0.5 * down;
     R.legs.forEach((L, i) => { L.top.rotation.x = thigh[i]; L.top.rotation.z = (i ? 1 : -1) * spread[i]; L.mid.rotation.x = knee[i]; });
     R.arms.forEach((A, i) => { A.top.rotation.x = sh[i]; A.top.rotation.z = (i ? 1 : -1) * (0.12 + 0.25 * this.cheer); A.mid.rotation.x = el[i]; });
-    R.shirt.emissive.setHex(this.trip > 0 && Math.floor(t * 12) % 2 ? 0x991b1b : 0);
 
     // rintangan: jatuh ke depan kalau ditabrak, tanda "?" mengecil saat ditanya
     this.hurdle.visible = !!o; this.marker.visible = false;
@@ -1121,15 +1149,16 @@ const G = {
 
     // kamera mengikuti dengan halus; saat hitung mundur berayun dari depan ke belakang pelari
     const C = this.cam, portrait = C.aspect < 1;
-    if (this._snap) { this._snap = false; C.position.set(2.4, 1.7, rz - 4.5); this.look.set(0, 1.2, rz); }
+    if (this._snap) { this._snap = false; C.position.set(3.6, 2.1, rz - 6.5); this.look.set(0, 1.2, rz); }
     const goal = this._v1.set(portrait ? 1.7 : 2.6, (portrait ? 3.1 : 2.4) + this.jy * 0.35, rz + (portrait ? 6.8 : 5.6));
     const aim = this._v2.set(0, 1.1 + this.jy * 0.45, rz - 5);
     const kc = 1 - Math.exp(-(this.state === 'idle' ? 1.3 : 5) * dt);
-    C.position.lerp(goal, kc); this.look.lerp(aim, kc); C.lookAt(this.look);
+    C.position.lerp(goal, kc); this.look.lerp(aim, kc);
+    this.shake *= Math.exp(-6 * dt); // guncangan kecil saat badan menghantam lintasan
+    C.lookAt(this._v2.copy(this.look).add(this._v1.set((Math.random() - .5) * .3 * this.shake, (Math.random() - .5) * .3 * this.shake, 0)));
     const fov = (portrait ? 66 : 52) + 6 * run;
     if (Math.abs(C.fov - fov) > .01) { C.fov = mix(C.fov, fov, 1 - Math.exp(-3 * dt)); C.updateProjectionMatrix(); }
     this.sun.position.set(-6, 11, rz + 4); this.sun.target.position.set(0, 0, rz - 2);
-    this.sunDisk.position.set(28, 16, rz - 220);
     this.r.render(this.scene, C);
   }
 };
