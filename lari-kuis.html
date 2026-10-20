@@ -68,43 +68,77 @@ h2{font-size:26px}
 .or:before,.or:after{content:"";flex:1;height:1px;background:var(--rule)}
 @media (max-width:860px){.home-grid{grid-template-columns:1fr;gap:0}.bib{order:-1;margin-top:-48px}.intro{padding-top:28px}}
 
-/* HOST LOBBY */
+/* HOST: pita lintasan di atas tiap layar host */
+#host-lobby,#host-race,#host-board{flex-direction:column}
 #host-lobby .wrap,#host-race .wrap,#host-board .wrap{display:flex;flex-direction:column;gap:18px}
+.host-band{color:#fff;background:repeating-linear-gradient(180deg,transparent 0 calc(50% - 2px),rgba(255,255,255,.75) calc(50% - 2px) 50%),var(--track)}
+.host-band .wrap{flex-direction:row!important;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:20px;padding-bottom:20px}
+.host-band h2{font-size:40px;font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900}
+.band-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:7px 14px;border-radius:99px;font-weight:600}
+.pill b{color:var(--track);letter-spacing:.08em}
+.btn.light{background:#fff;color:var(--track)}
+.btn.light:hover{background:#fdecea}
+.btn.big{font-size:20px;padding:16px 28px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-.lobby-grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
+
+/* LOBBY */
+.lobby-grid{display:grid;grid-template-columns:380px 1fr;gap:18px;align-items:start}
 .joinbox{text-align:center}
-.bigcode{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:88px;font-weight:900;letter-spacing:.06em;line-height:1;margin:6px 0 14px}
-#hl-qr{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px;display:inline-block;min-width:268px;min-height:268px}
+.join-step{font-weight:600;color:var(--muted);margin:2px 0 10px}
+.bigcode{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:96px;font-weight:900;letter-spacing:.06em;line-height:1;margin:0 0 8px}
+#hl-qr{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:14px;display:inline-block;min-width:268px;min-height:268px;margin-bottom:16px}
 #hl-qr img,#hl-qr canvas{display:block}
-#hl-url{font-size:12px;word-break:break-all;margin-top:10px}
+#hl-url{font-size:12px;word-break:break-all;margin-top:6px}
 .warn{background:#fdecea;border:1px solid #f3b7ae;color:#8c2a1d;padding:10px 12px;border-radius:6px;font-size:13px;margin-top:12px;text-align:left}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-content:flex-start;min-height:120px}
+.startline{display:flex;flex-direction:column;min-height:520px}
+.count{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:64px;font-weight:900;line-height:1}
+.bibs{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;margin-top:18px;align-content:start;flex:1}
+.bibs .empty{grid-column:1/-1;color:var(--muted);padding:40px 0;text-align:center;border:2px dashed var(--rule);border-radius:8px}
+.pbib{background:var(--paper);border:1px solid var(--rule);border-top:7px solid var(--c);border-radius:6px;padding:8px 8px 10px;text-align:center;min-width:0}
+.pbib b{display:block;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900;font-size:40px;line-height:1}
+.pbib span{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pbib.off{opacity:.4}
+.pbib.new{animation:bibIn .55s cubic-bezier(.2,1.5,.4,1)}
+@keyframes bibIn{from{transform:translateY(18px) scale(.8);opacity:0}to{transform:none;opacity:1}}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 .chip{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--rule);padding:7px 13px;border-radius:99px;font-weight:600}
 .chip.off{opacity:.4}
-.dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
-.count{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:52px;font-weight:900;line-height:1}
-@media (max-width:860px){.lobby-grid{grid-template-columns:1fr}}
+@media (max-width:900px){.lobby-grid{grid-template-columns:1fr}.startline{min-height:0}}
 
-/* HOST RACE */
-.race-grid{display:grid;grid-template-columns:1fr 300px;gap:18px}
-.lanes{display:flex;flex-direction:column;gap:10px}
-.lane{display:grid;grid-template-columns:140px 1fr 56px;align-items:center;gap:10px;transition:opacity .3s}
-.lane.off{opacity:.4}
-.lane-name{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lane-track{position:relative;height:36px;border-radius:3px;
-  background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(255,255,255,.3) calc(10% - 2px) 10%),var(--track);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.85),inset 0 -2px 0 rgba(255,255,255,.85);overflow:visible}
-.lane-track:after{content:"";position:absolute;right:0;top:0;bottom:0;width:10px;background:repeating-conic-gradient(#fff 0 25%,var(--ink) 0 50%) 0 0/10px 10px}
-.lane-runner{position:absolute;z-index:1;isolation:isolate;top:50%;transform:translate(-50%,-50%);transition:left 1.2s cubic-bezier(.4,0,.2,1);font-size:22px}
-.lane-runner span{display:inline-block;transform:scaleX(-1)}
-.lane-runner i{position:absolute;inset:-3px -5px;border-radius:50%;background:var(--c);border:2px solid #fff;z-index:-1}
-.lane-score{font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;text-align:right;font-size:22px}
+/* RACE: satu lintasan merah, tiap peserta satu jalur */
+.race-grid{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+.stadium{background:var(--track);border-radius:8px;padding:6px 0;box-shadow:inset 0 0 0 3px #fff,0 0 0 6px var(--grass)}
+.lane{display:grid;grid-template-columns:44px 130px 1fr 64px;align-items:center;gap:10px;height:46px;padding-right:14px;color:#fff;border-bottom:2px solid rgba(255,255,255,.8);transition:opacity .3s}
+.lane:last-child{border-bottom:0}
+.lanes.dense .lane{height:34px}
+.lane.off{opacity:.45}
+.lane-no{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900;font-size:26px;text-align:center;opacity:.9}
+.lane-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane-track{position:relative;height:100%;
+  background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 3px),rgba(255,255,255,.55) calc(10% - 3px) 10%);
+  border-left:4px solid #fff}
+.lane-track:after{content:"";position:absolute;right:0;top:0;bottom:0;width:12px;background:repeating-conic-gradient(#fff 0 25%,var(--ink) 0 50%) 0 0/12px 12px}
+.tok{position:absolute;top:50%;left:0;z-index:1;width:32px;height:32px;border-radius:50%;background:var(--c);border:3px solid #fff;color:#fff;display:grid;place-items:center;
+  font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;font-size:15px;transform:translate(-50%,-50%);box-shadow:0 3px 0 rgba(0,0,0,.25);transition:left 1.2s cubic-bezier(.4,0,.2,1)}
+.lanes.dense .tok{width:26px;height:26px;font-size:13px}
+.tok.hop{animation:hop .6s cubic-bezier(.3,.7,.4,1)}
+@keyframes hop{0%,100%{transform:translate(-50%,-50%)}45%{transform:translate(-50%,-120%) scale(1.1)}}
+.tok.trip{animation:trip .6s}
+@keyframes trip{0%,100%{transform:translate(-50%,-50%)}20%{transform:translate(-50%,-50%) rotate(-25deg)}45%{transform:translate(-50%,-35%) rotate(20deg)}70%{transform:translate(-50%,-50%) rotate(-10deg)}}
+.tok .place{position:absolute;top:-10px;right:-14px;background:#fff;color:var(--ink);border-radius:4px;padding:0 4px;font-size:12px;line-height:16px}
+.lane-score{position:relative;font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;text-align:right;font-size:24px}
+.pop{position:absolute;right:0;top:-6px;font-size:18px;font-weight:900;pointer-events:none;animation:popUp 1s ease-out forwards}
+.pop.up{color:#b6f5c1}.pop.down{color:#ffd0c8}
+@keyframes popUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-26px);opacity:0}}
 .rank-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
 .rank-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:6px;background:var(--soft)}
-.rank-row b{font-size:15px}
+.rank-row:first-child{background:#fbf3dc}
+.rank-row b{font-size:16px}
 .rank-row .n{color:var(--muted);font-weight:700}
-.pill{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--rule);padding:7px 14px;border-radius:99px;font-weight:600}
-@media (max-width:860px){.race-grid{grid-template-columns:1fr}.lane{grid-template-columns:90px 1fr 44px}}
+@media (max-width:900px){.race-grid{grid-template-columns:1fr}.lane{grid-template-columns:30px 80px 1fr 44px}}
+@media (prefers-reduced-motion:reduce){.tok,.pbib.new,.tok.hop,.tok.trip,.pop{animation:none;transition:none}}
 
 /* COUNTDOWN */
 .countdown{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(28,39,51,.5);z-index:50;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-weight:900;font-size:clamp(150px,32vw,280px);color:#fff}
@@ -113,19 +147,25 @@ h2{font-size:26px}
 @keyframes cd{from{transform:scale(1.5);opacity:0}30%{opacity:1}to{transform:scale(.95)}}
 @media (prefers-reduced-motion:reduce){.countdown span{animation:none}}
 
-/* BOARD */
-.podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:10px 0 6px}
-.pod{width:180px;text-align:center}
-.pod .bar{border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:10px;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:56px;font-weight:900;color:#fff}
-.pod .nm{font-weight:700;font-size:18px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pod .sc{color:var(--track);font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;font-size:24px;margin-bottom:8px}
-.p1 .bar{height:180px;background:#d4a22a}
-.p2 .bar{height:130px;background:#9aa6b0}
-.p3 .bar{height:95px;background:#b2774a}
+/* BOARD: podium naik satu per satu (3 → 2 → 1), lalu tabel */
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40}
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:18px 0 6px;min-height:300px}
+.pod{width:200px;text-align:center}
+.pod .bar{border-radius:4px 4px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:10px;font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:72px;font-weight:900;line-height:1;color:#fff;transform-origin:bottom;animation:grow .8s cubic-bezier(.2,.9,.3,1.15) both;animation-delay:var(--d)}
+.pod .nm{display:flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:20px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod .sc{color:var(--track);font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-weight:800;font-size:30px;margin-bottom:8px}
+.pod .nm,.pod .sc{animation:fadeUp .45s both;animation-delay:calc(var(--d) + .55s)}
+.p1 .bar{height:220px;background:#d4a22a}
+.p2 .bar{height:160px;background:#9aa6b0}
+.p3 .bar{height:115px;background:#b2774a}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes fadeUp{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+#hb-table tr{animation:fadeUp .35s both;animation-delay:calc(2s + var(--i) * 60ms)}
 table{width:100%;border-collapse:collapse}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--rule)}
 th{color:var(--muted);font-size:14px;font-weight:600}
 td.num,th.num{text-align:right}
+@media (prefers-reduced-motion:reduce){.pod .bar,.pod .nm,.pod .sc,#hb-table tr{animation:none}}
 
 /* PLAYER */
 .pcenter{align-items:center;justify-content:center;text-align:center;padding:24px 16px}
@@ -176,6 +216,7 @@ td.num,th.num{text-align:right}
 .overlay{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(28,39,51,.5);padding:16px;text-align:center}
 .overlay.show{display:flex}
 .overlay .card{max-width:380px;width:100%}
+#p-done{align-items:flex-end;padding-bottom:max(24px,env(safe-area-inset-bottom));background:linear-gradient(transparent 45%,rgba(28,39,51,.6));animation:fadeUp .5s both}
 .big{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:84px;font-weight:900;line-height:1;margin:6px 0}
 .myrank{font-family:var(--display);font-stretch:62%;font-variation-settings:"wdth" 62;font-size:120px;font-weight:900;color:var(--track);line-height:.9}
 .banner{position:absolute;left:50%;top:76px;transform:translateX(-50%);background:var(--bad);color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;z-index:30;display:none}
@@ -210,26 +251,27 @@ td.num,th.num{text-align:right}
 
 <!-- ============ HOST LOBBY ============ -->
 <section class="screen" id="host-lobby">
+  <div class="host-band"><div class="wrap">
+    <h2>Lobi</h2>
+    <span class="pill" id="hl-status">Menyiapkan room…</span>
+  </div></div>
   <div class="wrap">
-    <div class="topbar">
-      <h2>Lobi</h2>
-      <span class="pill" id="hl-status">Menyiapkan room…</span>
-    </div>
     <div class="lobby-grid">
       <div class="card joinbox">
-        <div class="muted" style="font-weight:700">Scan QR atau masukkan kode</div>
-        <div class="bigcode" id="hl-code">······</div>
+        <p class="join-step">Scan QR ini dengan kamera HP</p>
         <div id="hl-qr"></div>
+        <p class="join-step">atau buka web ini dan masukkan kode</p>
+        <div class="bigcode" id="hl-code">······</div>
         <div class="muted" id="hl-url"></div>
         <div class="warn" id="hl-filewarn" style="display:none">File dibuka langsung dari komputer (file://), jadi QR tidak bisa dibuka di HP. Hosting file ini dulu (mis. GitHub Pages / Netlify) lalu buka lewat https.</div>
       </div>
-      <div class="card" style="display:flex;flex-direction:column">
+      <div class="card startline">
         <div class="topbar">
-          <div><span class="count" id="hl-count">0</span><span class="muted" style="font-weight:700"> / 20 peserta</span></div>
-          <button class="btn" id="btn-start" disabled>Mulai lomba</button>
+          <div><span class="count" id="hl-count">0</span><span class="muted" style="font-weight:600"> dari 20 pelari siap di garis start</span></div>
+          <button class="btn big" id="btn-start" disabled>Mulai lomba</button>
         </div>
-        <div class="chips" id="hl-players"><span class="muted">Menunggu peserta bergabung…</span></div>
-        <p class="muted" style="font-size:13px;margin-top:auto;padding-top:14px">10 gawang, 20 detik per soal. Urutan jawaban diacak untuk tiap peserta.</p>
+        <div class="bibs" id="hl-players"><div class="empty">Belum ada pelari. Nama peserta muncul di sini begitu mereka gabung.</div></div>
+        <p class="muted" style="font-size:14px;padding-top:14px">10 gawang, 20 detik per soal. Urutan jawaban diacak untuk tiap peserta.</p>
       </div>
     </div>
   </div>
@@ -237,17 +279,18 @@ td.num,th.num{text-align:right}
 
 <!-- ============ HOST RACE ============ -->
 <section class="screen" id="host-race">
-  <div class="wrap">
-    <div class="topbar">
-      <h2>Lomba berlangsung</h2>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <span class="pill">Kode <b style="color:var(--accent);letter-spacing:.1em" id="hr-code"></b></span>
-        <span class="pill" id="hr-done">0/0 finish</span>
-        <button class="btn small" id="btn-end">Akhiri &amp; Leaderboard</button>
-      </div>
+  <div class="host-band"><div class="wrap">
+    <h2>Lomba berlangsung</h2>
+    <div class="band-meta">
+      <span class="pill">Kode <b id="hr-code"></b></span>
+      <span class="pill" id="hr-time">0:00</span>
+      <span class="pill" id="hr-done">0/0 finish</span>
+      <button class="btn small light" id="btn-end">Akhiri &amp; Leaderboard</button>
     </div>
+  </div></div>
+  <div class="wrap">
     <div class="race-grid">
-      <div class="card"><div class="lanes" id="hr-lanes"></div></div>
+      <div class="stadium"><div class="lanes" id="hr-lanes"></div></div>
       <div class="card">
         <h2>Skor sementara</h2>
         <div class="rank-list" id="hr-rank"></div>
@@ -258,14 +301,15 @@ td.num,th.num{text-align:right}
 
 <!-- ============ HOST BOARD ============ -->
 <section class="screen" id="host-board">
-  <div class="wrap">
-    <div class="topbar">
-      <h2>Leaderboard</h2>
-      <div style="display:flex;gap:10px">
-        <button class="btn ghost small" id="btn-csv">Unduh CSV</button>
-        <button class="btn small" id="btn-again">Main lagi</button>
-      </div>
+  <canvas id="confetti"></canvas>
+  <div class="host-band"><div class="wrap">
+    <h2>Leaderboard</h2>
+    <div class="band-meta">
+      <button class="btn ghost small" id="btn-csv">Unduh CSV</button>
+      <button class="btn small light" id="btn-again">Main lagi</button>
     </div>
+  </div></div>
+  <div class="wrap">
     <div class="podium" id="hb-podium"></div>
     <div class="card"><table><thead><tr><th>#</th><th>Nama</th><th class="num">Benar</th><th class="num">Waktu</th><th class="num">Skor</th></tr></thead><tbody id="hb-table"></tbody></table></div>
   </div>
@@ -358,46 +402,46 @@ const CONFIG = {
    BANK SOAL — answer = index jawaban benar (0 = opsi pertama)
    ========================================================= */
 const QUESTIONS = [
-  { q: "PT Maju membeli mesin produksi baru senilai Rp2 miliar secara tunai. Di bagian mana transaksi ini dilaporkan pada Laporan Arus Kas?",
-    options: ["Arus kas dari aktivitas operasi", "Arus kas dari aktivitas investasi", "Arus kas dari aktivitas pendanaan", "Tidak dilaporkan di laporan arus kas"],
-    answer: 1,
-    exp: "Pembelian aset tetap adalah keputusan investasi jangka panjang, sehingga kas keluarnya masuk aktivitas investasi. Di laporan posisi keuangan, aset tetap naik dan kas turun." },
-  { q: "RUPS memutuskan membagikan dividen tunai kepada pemegang saham. Bagaimana dampaknya pada laporan keuangan?",
-    options: ["Beban dividen di laporan laba rugi bertambah", "Saldo laba berkurang dan pembayarannya tercatat di arus kas pendanaan", "Pendapatan perusahaan berkurang", "Utang usaha bertambah"],
-    answer: 1,
-    exp: "Dividen adalah pembagian laba kepada pemilik, bukan beban. Dividen mengurangi saldo laba di laporan perubahan ekuitas, dan pembayarannya umumnya disajikan di aktivitas pendanaan." },
-  { q: "Untuk membiayai ekspansi pabrik, perusahaan menerbitkan obligasi berjangka 5 tahun. Apa dampaknya pada Laporan Posisi Keuangan?",
-    options: ["Kas naik dan liabilitas jangka panjang naik", "Kas naik dan ekuitas naik", "Aset tetap naik dan pendapatan naik", "Kas turun dan liabilitas turun"],
-    answer: 0,
-    exp: "Obligasi adalah utang. Saat diterbitkan, perusahaan menerima kas dan mencatat utang obligasi sebagai liabilitas jangka panjang. Penerimaan kasnya masuk aktivitas pendanaan." },
-  { q: "Perusahaan menjual produk kepada distributor dengan pembayaran 30 hari kemudian. Apa yang dicatat saat penjualan terjadi?",
-    options: ["Kas bertambah dan pendapatan bertambah", "Piutang usaha bertambah dan pendapatan bertambah", "Utang usaha bertambah dan persediaan bertambah", "Belum dicatat sampai kas diterima"],
-    answer: 1,
-    exp: "Dengan basis akrual, pendapatan diakui saat barang diserahkan, bukan saat kas diterima. Hak tagih kepada distributor dicatat sebagai piutang usaha." },
-  { q: "Manajemen mencatat beban penyusutan gedung kantor untuk tahun berjalan. Pernyataan mana yang benar?",
-    options: ["Penyusutan mengurangi saldo kas perusahaan", "Penyusutan adalah beban di laba rugi, tetapi tidak mengeluarkan kas", "Penyusutan dicatat di arus kas pendanaan", "Penyusutan menambah nilai buku aset tetap"],
-    answer: 1,
-    exp: "Penyusutan mengalokasikan biaya aset selama umur manfaatnya. Ia mengurangi laba dan nilai buku aset, tetapi bukan pengeluaran kas — karena itu ditambahkan kembali pada arus kas operasi metode tidak langsung." },
-  { q: "Pembayaran gaji karyawan bagian produksi dan administrasi bulan ini termasuk arus kas dari aktivitas apa?",
-    options: ["Aktivitas operasi", "Aktivitas investasi", "Aktivitas pendanaan", "Bukan arus kas"],
-    answer: 0,
-    exp: "Gaji adalah bagian dari kegiatan utama sehari-hari perusahaan dalam menghasilkan pendapatan, sehingga dilaporkan di arus kas aktivitas operasi." },
-  { q: "Perusahaan memutuskan membeli kembali sahamnya sendiri dari pasar (buyback). Bagaimana pengaruhnya pada laporan keuangan?",
-    options: ["Aset investasi bertambah", "Ekuitas berkurang (saham treasuri) dan kas keluar di aktivitas pendanaan", "Pendapatan lain-lain bertambah", "Liabilitas bertambah"],
-    answer: 1,
-    exp: "Saham yang dibeli kembali dicatat sebagai saham treasuri, pengurang ekuitas — bukan aset. Transaksi dengan pemilik seperti ini termasuk aktivitas pendanaan." },
-  { q: "Perusahaan membeli bahan baku dari pemasok secara kredit. Apa dampaknya pada Laporan Posisi Keuangan?",
-    options: ["Persediaan naik dan utang usaha naik", "Persediaan naik dan kas turun", "Beban pokok penjualan langsung naik", "Piutang usaha naik"],
-    answer: 0,
-    exp: "Bahan baku dicatat sebagai persediaan (aset), dan kewajiban membayar pemasok dicatat sebagai utang usaha (liabilitas). Kas belum berubah sampai utang dibayar." },
-  { q: "Perusahaan menghadapi gugatan hukum yang hasilnya belum pasti dan jumlahnya belum dapat diestimasi secara andal. Di mana informasi ini disajikan?",
-    options: ["Laporan laba rugi sebagai beban", "Laporan arus kas", "Catatan atas Laporan Keuangan sebagai liabilitas kontinjensi", "Tidak perlu diungkapkan"],
+  { q: "Sebuah departemen menghemat biaya Rp200 juta. Namun, sebagian penghematan berasal dari penundaan pembayaran supplier dan sebagian lagi dari pengurangan pemakaian material yang benar-benar efisien. Kesimpulan terbaik adalah...",
+    options: ["Seluruh nilai Rp200 juta pasti meningkatkan laba dan kas sebesar jumlah yang sama", "Penundaan pembayaran selalu meningkatkan laba", "Penghematan operasional dapat meningkatkan laba, sedangkan penundaan pembayaran memengaruhi arus kas dan utang", "Kas tidak berkurang"],
     answer: 2,
-    exp: "Kewajiban yang belum pasti dan tidak dapat diukur andal tidak diakui sebagai liabilitas, tetapi wajib diungkapkan di Catatan atas Laporan Keuangan (CALK) sebagai liabilitas kontinjensi." },
-  { q: "Perusahaan menjual gedung lama dengan harga di atas nilai bukunya. Bagaimana pencatatannya?",
-    options: ["Selisihnya diakui sebagai keuntungan di laba rugi; kas masuk di aktivitas investasi", "Seluruh hasil penjualan dicatat sebagai pendapatan usaha", "Selisihnya langsung menambah modal saham", "Kas masuk dicatat di aktivitas operasi"],
+    exp: "Efisiensi pemakaian material benar-benar menurunkan beban, jadi laba naik. Menunda pembayaran supplier tidak mengurangi beban: kas hanya tertahan sementara dan utang usaha bertambah." },
+  { q: "Perusahaan membeli mesin Rp1 miliar secara tunai. Mesin langsung digunakan dan memiliki masa manfaat beberapa tahun. Manakah pernyataan yang paling tepat?",
+    options: ["Langsung menjadi beban saat pembelian terjadi", "Kas turun, aset tetap naik, lalu didepresiasi sesuai masa manfaat", "Kas berkurang", "Hanya dicatat sebagai aset tetap"],
+    answer: 1,
+    exp: "Mesin dengan masa manfaat beberapa tahun dicatat sebagai aset tetap, bukan beban. Biayanya dibebankan bertahap lewat depresiasi selama masa manfaat." },
+  { q: "Produksi menghasilkan barang dengan biaya produksi Rp500 juta. Barang tersebut belum terjual sampai akhir bulan. Pernyataan yang paling tepat adalah...",
+    options: ["Seluruh biaya produksi masuk ke beban laba rugi", "Laba turun Rp500 juta", "Kas menurun", "Masuk dalam nilai persediaan sampai barang terjual"],
+    answer: 3,
+    exp: "Biaya produksi barang yang belum terjual disimpan sebagai persediaan (aset). Baru saat barang terjual, biayanya pindah menjadi beban pokok penjualan." },
+  { q: "Produksi menghasilkan produk cacat yang tidak dapat diperbaiki. Apa risiko keuangannya?",
+    options: ["Persediaan pasti meningkat", "Pendapatan otomatis bertambah", "Biaya produksi atau kerugian dapat meningkat", "Utang usaha otomatis berkurang"],
+    answer: 2,
+    exp: "Produk cacat yang tidak bisa diperbaiki tidak dapat dijual, sehingga biaya yang sudah dikeluarkan menjadi tambahan biaya produksi atau dicatat sebagai kerugian." },
+  { q: "Barang telah dikirim kepada pelanggan, tetapi faktur belum diterbitkan. Apa yang harus dilakukan?",
+    options: ["Evaluasi pengakuan pendapatan berdasarkan kontrak dan bukti pemenuhan kewajiban", "Selalu menunggu pembayaran baru mencatat transaksi", "Langsung mencatat seluruh nilai sebagai kas", "Tidak perlu dicatat sampai akhir tahun"],
     answer: 0,
-    exp: "Penjualan aset tetap bukan kegiatan usaha utama. Selisih harga jual di atas nilai buku diakui sebagai keuntungan (pendapatan lain-lain), dan kas yang diterima masuk aktivitas investasi." }
+    exp: "Pendapatan diakui saat kewajiban kepada pelanggan sudah dipenuhi sesuai kontrak, bukan menunggu faktur atau pembayaran. Bukti pengiriman menjadi dasar penilaiannya." },
+  { q: "Perusahaan memiliki laba tinggi, tetapi banyak pelanggan belum membayar. Apa kesimpulan yang tepat?",
+    options: ["Laba dan arus kas tidak selalu sama", "Perusahaan pasti memiliki kas berlebih", "Piutang tidak berpengaruh terhadap kas", "Perusahaan pasti merugi"],
+    answer: 0,
+    exp: "Penjualan kredit menambah laba saat diakui, tetapi kasnya baru masuk ketika pelanggan membayar. Laba tinggi belum tentu berarti kas banyak." },
+  { q: "Perusahaan membeli bahan baku yang diterima pada bulan Januari, tetapi penerimaan barangnya baru dicatat pada bulan Februari. Apa yang terjadi?",
+    options: ["Persediaan yang diakui tidak sesuai dengan kondisi di lapangan", "Tidak ada pengaruh dalam laporan", "Tidak masalah selama belum diproduksi", "Tidak memengaruhi laba rugi"],
+    answer: 0,
+    exp: "Barang sudah ada di gudang sejak Januari tetapi belum tercatat, sehingga persediaan dan utang ke pemasok di laporan Januari lebih kecil dari kondisi sebenarnya." },
+  { q: "Perusahaan memberikan kredit 60 hari kepada pelanggan. Apa dampak yang mungkin terjadi?",
+    options: ["Kas langsung meningkat", "Laba selalu meningkat sebesar nilai piutang", "Utang usaha pasti menurun", "Piutang usaha meningkat dan arus kas masuk tertunda"],
+    answer: 3,
+    exp: "Penjualan dengan kredit 60 hari dicatat sebagai piutang usaha. Kasnya baru masuk setelah pelanggan membayar, jadi arus kas masuk tertunda." },
+  { q: "Perusahaan memberikan kredit 60 hari kepada pelanggan. Apa dampak yang mungkin terjadi?",
+    options: ["Piutang usaha meningkat dan arus kas masuk tertunda", "Laba selalu meningkat sebesar nilai piutang", "Kas langsung meningkat", "Utang usaha pasti menurun"],
+    answer: 0,
+    exp: "Penjualan dengan kredit 60 hari dicatat sebagai piutang usaha. Kasnya baru masuk setelah pelanggan membayar, jadi arus kas masuk tertunda." },
+  { q: "Pembayaran gaji karyawan bagian produksi dan administrasi bulan ini termasuk arus kas dari aktivitas apa?",
+    options: ["Aktivitas investasi", "Aktivitas pendanaan", "Aktivitas operasi", "Neraca"],
+    answer: 2,
+    exp: "Gaji adalah bagian dari kegiatan utama sehari-hari perusahaan dalam menghasilkan pendapatan, sehingga dilaporkan di arus kas aktivitas operasi." }
 ];
 
 /* =========================================================
@@ -440,7 +484,7 @@ function countdown(ms, done){
 /* =========================================================
    HOST
    ========================================================= */
-const H = { peer: null, code: '', players: [], phase: 'lobby', startAt: 0, lanes: new Map(), ending: null };
+const H = { peer: null, code: '', players: [], phase: 'lobby', startAt: 0, lanes: new Map(), rows: new Map(), seen: new Set(), ending: null, clock: null };
 
 function hostCreate(){
   show('host-lobby');
@@ -549,6 +593,9 @@ function hostStartGame(){
   hostBroadcast({ t: 'start', startIn: 4000 });
   $('#hr-code').textContent = H.code;
   $('#hr-lanes').innerHTML = ''; H.lanes.clear();
+  $('#hr-rank').innerHTML = ''; H.rows.clear();
+  clearInterval(H.clock); $('#hr-time').textContent = '0:00';
+  H.clock = setInterval(() => { $('#hr-time').textContent = fmtTime(Math.max(0, Date.now() - H.startAt)); }, 500);
   show('host-race'); renderHost();
   countdown(4000, () => {});
 }
@@ -567,7 +614,7 @@ function boardFor(p){
 
 function hostEnd(){
   if (H.phase !== 'race') return;
-  clearTimeout(H.ending);
+  clearTimeout(H.ending); clearInterval(H.clock);
   H.phase = 'end';
   H.players.forEach(p => send(p.conn, Object.assign({ t: 'end' }, boardFor(p))));
   renderBoard();
@@ -582,44 +629,95 @@ function hostAgain(){
   show('host-lobby'); renderHost();
 }
 
+const reducedMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+// animasi CSS dijalankan ulang walau class yang sama sudah ada
+function replay(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+
 function renderHost(){
-  // lobby
+  // lobby: tiap pelari = nomor dada; yang baru gabung muncul dengan animasi
   $('#hl-count').textContent = H.players.length;
   $('#btn-start').disabled = H.players.length === 0;
   $('#hl-players').innerHTML = H.players.length
-    ? H.players.map(p => `<span class="chip ${p.online ? '' : 'off'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</span>`).join('')
-    : '<span class="muted">Menunggu peserta bergabung…</span>';
+    ? H.players.map((p, i) => {
+        const fresh = !H.seen.has(p.pid); H.seen.add(p.pid);
+        return `<div class="pbib ${p.online ? '' : 'off'} ${fresh ? 'new' : ''}" style="--c:${p.color}"><b>${i + 1}</b><span>${esc(p.name)}</span></div>`;
+      }).join('')
+    : '<div class="empty">Belum ada pelari. Nama peserta muncul di sini begitu mereka gabung.</div>';
   if (H.phase === 'lobby') return;
-  // race lanes (update in place agar animasi mulus)
+
+  // jalur lomba (update di tempat supaya transisi posisi mulus)
   const lanesEl = $('#hr-lanes');
-  H.players.forEach(p => {
+  lanesEl.classList.toggle('dense', H.players.length > 12);
+  const order = ranking(), finished = H.players.filter(p => p.done).sort((a, b) => a.finishMs - b.finishMs);
+  H.players.forEach((p, i) => {
     let el = H.lanes.get(p.pid);
     if (!el) {
       el = document.createElement('div');
       el.className = 'lane';
-      el.innerHTML = `<div class="lane-name"><span class="dot"></span><span class="nm"></span></div><div class="lane-track"><div class="lane-runner"><i></i><span>🏃</span></div></div><div class="lane-score"></div>`;
+      el.innerHTML = `<div class="lane-no">${i + 1}</div><div class="lane-name"></div><div class="lane-track"><div class="tok"></div></div><div class="lane-score"><span></span></div>`;
+      el._a = 0; el._s = CONFIG.START_SCORE;
       lanesEl.appendChild(el); H.lanes.set(p.pid, el);
     }
     el.classList.toggle('off', !p.online);
-    el.querySelector('.dot').style.background = p.color;
-    el.querySelector('.nm').textContent = p.name;
-    const r = el.querySelector('.lane-runner');
-    r.style.setProperty('--c', p.color);
-    r.style.left = (3 + (p.answered / N) * 93) + '%';
-    r.querySelector('span').textContent = p.done ? '🏁' : '🏃';
-    el.querySelector('.lane-score').textContent = p.score;
+    el.querySelector('.lane-name').textContent = p.name;
+    const tok = el.querySelector('.tok');
+    tok.style.setProperty('--c', p.color);
+    tok.style.left = (2 + (p.answered / N) * 94) + '%';
+    const place = finished.indexOf(p) + 1;
+    tok.innerHTML = esc((p.name[0] || '?').toUpperCase()) + (place ? `<span class="place">#${place}</span>` : '');
+    if (p.answered > el._a) replay(tok, p.answers[p.answered - 1] ? 'hop' : 'trip');
+    const sc = el.querySelector('.lane-score');
+    sc.querySelector('span').textContent = p.score;
+    if (p.score !== el._s) {
+      const d = p.score - el._s, pop = document.createElement('span');
+      pop.className = 'pop ' + (d > 0 ? 'up' : 'down'); pop.textContent = (d > 0 ? '+' : '') + d;
+      sc.appendChild(pop); setTimeout(() => pop.remove(), 1000);
+    }
+    el._a = p.answered; el._s = p.score;
   });
-  const done = H.players.filter(p => p.done).length;
-  $('#hr-done').textContent = `${done}/${H.players.length} finish`;
-  $('#hr-rank').innerHTML = ranking().map((p, i) =>
-    `<div class="rank-row"><span class="n">${i + 1}</span><span style="display:flex;align-items:center;gap:8px;overflow:hidden"><span class="dot" style="background:${p.color}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>${p.done ? ' 🏁' : ''}</span><b>${p.score}</b></div>`).join('');
+  $('#hr-done').textContent = `${finished.length}/${H.players.length} finish`;
+
+  // peringkat: baris dipakai ulang lalu diurutkan, perpindahannya dianimasikan (FLIP)
+  const rankEl = $('#hr-rank'), first = new Map();
+  [...rankEl.children].forEach(c => first.set(c.dataset.pid, c.getBoundingClientRect().top));
+  order.forEach((p, i) => {
+    let row = H.rows.get(p.pid);
+    if (!row) { row = document.createElement('div'); row.className = 'rank-row'; row.dataset.pid = p.pid; H.rows.set(p.pid, row); }
+    row.innerHTML = `<span class="n">${i + 1}</span><span style="display:flex;align-items:center;gap:8px;overflow:hidden"><span class="dot" style="background:${p.color}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>${p.done ? ' 🏁' : ''}</span><b>${p.score}</b>`;
+    rankEl.appendChild(row);
+  });
+  if (!reducedMotion() && rankEl.animate) [...rankEl.children].forEach(c => {
+    const f = first.get(c.dataset.pid), dy = f == null ? 0 : f - c.getBoundingClientRect().top;
+    if (dy) c.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 500, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  });
 }
 
 function renderBoard(){
   const r = ranking();
-  const order = [1, 0, 2].filter(i => r[i]);
-  $('#hb-podium').innerHTML = order.map(i => `<div class="pod p${i + 1}"><div class="nm">${esc(r[i].name)}</div><div class="sc">${r[i].score}</div><div class="bar">${i + 1}</div></div>`).join('');
-  $('#hb-table').innerHTML = r.map((p, i) => `<tr><td><b>${i + 1}</b></td><td><span class="dot" style="background:${p.color};margin-right:8px"></span>${esc(p.name)}</td><td class="num">${p.correct}/${N}</td><td class="num">${p.done ? fmtTime(p.finishMs) : 'belum finish'}</td><td class="num"><b style="font-size:18px">${p.score}</b></td></tr>`).join('');
+  const delay = { 0: 1.2, 1: .7, 2: .2 }; // juara 3 naik duluan, juara 1 terakhir
+  $('#hb-podium').innerHTML = [1, 0, 2].filter(i => r[i]).map(i => `<div class="pod p${i + 1}" style="--d:${delay[i]}s"><div class="nm"><span class="dot" style="background:${r[i].color}"></span>${esc(r[i].name)}</div><div class="sc">${r[i].score}</div><div class="bar">${i + 1}</div></div>`).join('');
+  $('#hb-table').innerHTML = r.map((p, i) => `<tr style="--i:${i}"><td><b>${i + 1}</b></td><td><span class="dot" style="background:${p.color};margin-right:8px"></span>${esc(p.name)}</td><td class="num">${p.correct}/${N}</td><td class="num">${p.done ? fmtTime(p.finishMs) : 'belum finish'}</td><td class="num"><b style="font-size:18px">${p.score}</b></td></tr>`).join('');
+  setTimeout(() => confetti($('#confetti')), 1300);
+}
+
+// konfeti 2D sederhana di atas leaderboard, berhenti sendiri setelah ~6 detik
+function confetti(cv){
+  if (reducedMotion()) return;
+  const ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = cv.width = innerWidth * dpr, h = cv.height = innerHeight * dpr;
+  const cols = ['#d4a22a', '#b04a35', '#3f7d3b', '#2f6fb0', '#ffffff', '#f97316'];
+  const ps = Array.from({ length: 180 }, () => ({ x: Math.random() * w, y: -Math.random() * h * .6, vx: (Math.random() - .5) * 2 * dpr, vy: (2 + Math.random() * 3) * dpr, r: Math.random() * 6, vr: (Math.random() - .5) * .3, s: (6 + Math.random() * 6) * dpr, c: cols[Math.floor(Math.random() * cols.length)] }));
+  const t0 = performance.now();
+  (function frame(now){
+    const age = (now - t0) / 1000;
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalAlpha = Math.max(0, Math.min(1, 6 - age));
+    ps.forEach(p => {
+      p.x += p.vx + Math.sin(age * 3 + p.r) * dpr; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
+    });
+    if (age < 6 && $('#host-board').classList.contains('active')) requestAnimationFrame(frame); else ctx.clearRect(0, 0, w, h);
+  })(t0);
 }
 
 function downloadCsv(){
@@ -858,7 +956,8 @@ function finishRace(){
   const correct = Object.values(P.results).filter(v => v === true).length;
   $('#pd-score').textContent = P.score;
   $('#pd-info').textContent = `${correct} dari ${N} jawaban benar`;
-  $('#p-done').classList.add('show');
+  // beri waktu animasi finish 3D tampil dulu sebelum kartu skor muncul
+  setTimeout(() => { if (P.phase === 'done') $('#p-done').classList.add('show'); }, G.r ? 3200 : 0);
 }
 
 function showPlayerBoard(b){
@@ -884,7 +983,7 @@ const G = {
   init(){
     if (!this._tried) { this._tried = true; if (window.THREE) try { this.setup(); } catch (e) { console.warn('3D tidak tersedia', e); } }
     this.resize();
-    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, lane: 0, x: 0, stumble: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true, auto: !this.r });
+    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, lane: 0, x: 0, stumble: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true, auto: !this.r, finT: 0, _fw: 0 });
     if (this.r) { this.paintRunner(); this.fin.visible = false; this.fx.forEach(m => m.visible = false); }
     this.spawnNext();
     cancelAnimationFrame(this.raf);
@@ -924,7 +1023,8 @@ const G = {
   // logika murni (tanpa three.js): kecepatan halus, berhenti sebelum rintangan, lompat / jatuh
   step(dt){
     const o = this.obs;
-    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED * (this.stumble > 0 ? 0.4 : 1)) : this.state === 'finished' ? 2.5 : 0;
+    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED * (this.stumble > 0 ? 0.4 : 1)) : this.state === 'finished' ? (this.dist < this.finishX + 3 ? 2.5 : 0) : 0;
+    if (this.state === 'finished') this.finT += dt;
     this.v += (target - this.v) * (1 - Math.exp(-(target > this.v ? 3 : 5) * dt));
     const before = this.dist;
     this.dist += this.v * dt;
@@ -952,11 +1052,15 @@ const G = {
         if (gap < -10) { this._pending = false; this.spawnNext(); }
       }
       for (const c of this.cones) if (!c.hit && before < c.z && this.dist >= c.z && Math.abs(this.x - c.lane * this.LANE) < 0.6 && this.jy < 0.5) { c.hit = true; this.stumble = 0.6; }
-      if (this.finishX !== null && this.dist >= this.finishX) { this.state = 'finished'; this.burst(70); finishRace(); }
+      if (this.finishX !== null && this.dist >= this.finishX) {
+        this.state = 'finished'; this.finT = 0;
+        [-2.1, 2.1].forEach(x => this.burst(60, x, 3.1, -this.finishX, 1.4)); // semburan dari kedua tiang gapura
+        finishRace();
+      }
     }
   },
 
-  tex(w, h, paint){ const c = document.createElement('canvas'); c.width = w; c.height = h; if (paint) paint(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return t; },
+  tex(w, h, paint){ const c = document.createElement('canvas'); c.width = w; c.height = h; if (paint) paint(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 8; return t; },
   setup(){
     const T = THREE, LEN = 1400, W = 3.6;
     const r = new T.WebGLRenderer({ canvas: $('#cv'), antialias: true });
@@ -968,7 +1072,7 @@ const G = {
     this.cam = new T.PerspectiveCamera(55, 1, 0.1, 400);
     scene.add(new T.HemisphereLight('#dcecff', '#4a6a35', 0.55));
     const sun = this.sun = new T.DirectionalLight('#fff3e0', 0.85);
-    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left: -8, right: 8, top: 8, bottom: -8, near: 1, far: 40 });
     sun.shadow.camera.updateProjectionMatrix();
     scene.add(sun, sun.target);
@@ -1055,12 +1159,19 @@ const G = {
     const ban = new T.Mesh(new T.BoxGeometry(4.4, .8, .08), new T.MeshStandardMaterial({ map: banTex })); ban.position.y = 3; fin.add(ban);
     const line = new T.Mesh(new T.PlaneGeometry(W, .6), new T.MeshStandardMaterial({ map: this.tex(144, 24, (c, w, h) => checker(c, w, h, 12)) }));
     line.rotation.x = -Math.PI / 2; line.position.y = .02; fin.add(line);
+    // pita finish: dua belahan menempel di tiang, terbuka ke depan saat diterobos
+    const tapeM = new T.MeshStandardMaterial({ color: '#dc2626', side: T.DoubleSide });
+    this.tape = [-1, 1].map(sd => {
+      const g = new T.Group(); g.position.set(sd * 2.1, 1.2, 0);
+      const m = new T.Mesh(new T.PlaneGeometry(2.1, .08), tapeM); m.position.x = -sd * 1.05; m.castShadow = true; g.add(m);
+      fin.add(g); return g;
+    });
     scene.add(fin);
 
     // konfeti
     this.fx = [];
     const cg = new T.PlaneGeometry(.09, .14);
-    for (let i = 0; i < 80; i++) { const m = new T.Mesh(cg, new T.MeshBasicMaterial({ color: new T.Color().setHSL(Math.random(), .9, .6), side: T.DoubleSide })); m.visible = false; scene.add(m); this.fx.push(m); }
+    for (let i = 0; i < 200; i++) { const m = new T.Mesh(cg, new T.MeshBasicMaterial({ color: new T.Color().setHSL(Math.random(), .9, .6), side: T.DoubleSide })); m.visible = false; scene.add(m); this.fx.push(m); }
 
     this.R = this.buildRunner(); scene.add(this.R.root);
     this.look = new T.Vector3(); this._v1 = new T.Vector3(); this._v2 = new T.Vector3();
@@ -1123,14 +1234,14 @@ const G = {
     if (!w || !h) return;
     this.r.setSize(w, h, false); this.cam.aspect = w / h; this.cam.updateProjectionMatrix();
   },
-  burst(n){
+  burst(n, ox = 0, oy = 1.3 + this.jy, oz = -this.dist, power = 1){
     if (!this.r) return;
     let k = 0;
     for (const m of this.fx) {
       if (m.visible) continue;
       if (k++ >= n) break;
-      m.visible = true; m.position.set((Math.random() - .5) * .6, 1.3 + this.jy, -this.dist);
-      m.userData = { v: new THREE.Vector3((Math.random() - .5) * 5, 2.5 + Math.random() * 4.5, -this.v * .7 - Math.random() * 3), s: (Math.random() - .5) * 20, life: 1.1 + Math.random() * .6 };
+      m.visible = true; m.position.set(ox + (Math.random() - .5) * .6, oy, oz);
+      m.userData = { v: new THREE.Vector3((Math.random() - .5) * 5 * power, (2.5 + Math.random() * 4.5) * power, -this.v * .7 - Math.random() * 3 * power), s: (Math.random() - .5) * 20, life: (1.1 + Math.random() * .6) * power };
     }
   },
   render(dt){
@@ -1215,9 +1326,18 @@ const G = {
     // di belakang pelari (sedikit ke kanan) supaya ketiga jalur terlihat
     const goal = this._v1.set((portrait ? 0.4 : 0.8) + this.x * 0.7, (portrait ? 3.4 : 2.9) + this.jy * 0.35, rz + (portrait ? 7 : 6.2));
     const aim = this._v2.set(this.x * 0.8, 1.1 + this.jy * 0.45, rz - 6);
-    const idle = this.state === 'idle', kc = 1 - Math.exp(-(idle ? 1.3 : 5) * dt);
+    const idle = this.state === 'idle', fin = this.state === 'finished';
+    if (fin) {
+      // selebrasi: kamera memutar dari belakang ke depan pelari, lalu terus berputar pelan
+      const a = 2.8 * ease(Math.min(1, this.finT / 3.5)) + Math.max(0, this.finT - 3.5) * 0.15, rad = portrait ? 6.5 : 5.5;
+      goal.set(this.x + Math.sin(a) * rad, 2.2, rz + Math.cos(a) * rad); aim.set(this.x, 1.2, rz);
+      const tf = Math.min(1, this.finT * 2);
+      this.tape.forEach((g, i) => { g.rotation.y = (i ? -1 : 1) * (1.4 * ease(tf) + Math.sin(t * 9 + i) * 0.12 * tf); g.rotation.x = 0.6 * tf; });
+      if (this.finT > 1 && this.finT < 8 && (this._fw += dt) > 0.9) { this._fw = 0; this.burst(30, (Math.random() - .5) * 6, 3.5 + Math.random() * 2, rz - 2 - Math.random() * 4, 0.9); }
+    } else this.tape.forEach(g => g.rotation.set(0, 0, 0));
+    const kc = 1 - Math.exp(-(idle ? 1.3 : fin ? 2.5 : 5) * dt);
     C.position.lerp(goal, kc); this.look.lerp(aim, kc);
-    if (!idle) { C.position.z = goal.z; this.look.z = aim.z; } // z tanpa lag: framing tetap stabil saat ngebut
+    if (!idle && !fin) { C.position.z = goal.z; this.look.z = aim.z; } // z tanpa lag: framing tetap stabil saat ngebut
     this.shake *= Math.exp(-6 * dt); // guncangan kecil saat badan menghantam lintasan
     C.lookAt(this._v2.copy(this.look).add(this._v1.set((Math.random() - .5) * .3 * this.shake, (Math.random() - .5) * .3 * this.shake, 0)));
     const fov = (portrait ? 66 : 52) + 6 * run;
