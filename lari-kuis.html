@@ -6,7 +6,7 @@
 <title>Lari Kuis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800;900&family=Onest:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
@@ -503,20 +503,10 @@ const CONFIG = {
   MAX_PLAYERS: 50,
   QUESTION_TIME: 40,   // detik per soal
   CONE: -2,            // poin kena cone
-  // Relay TURN untuk HP yang tidak bisa konek langsung (data seluler / Wi-Fi sekolah ketat).
-  // Isi dengan URL kredensial dari akun Metered gratis (dashboard > TURN Credentials), contoh:
-  // 'https://namaapp.metered.live/api/v1/turn/credentials?apiKey=XXXX'
-  TURN_API: '',
-  ICE_SERVERS: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
-  ]
+  // Server game: Supabase Realtime (dashboard > Project Settings > API). Kunci anon/publishable memang boleh publik.
+  SUPA_URL: 'https://tstimuuytlwgutqbecjx.supabase.co',
+  SUPA_KEY: 'sb_publishable_k5LQJK5rMgh52RDSs1Qh9g_gy5A9EZl'
 };
-// kredensial TURN diambil sekali saat halaman dibuka; kalau gagal, tetap jalan dengan STUN saja
-let ICE = CONFIG.ICE_SERVERS;
-const ICE_READY = !CONFIG.TURN_API ? Promise.resolve() : fetch(CONFIG.TURN_API).then(r => r.json())
-  .then(list => { if (Array.isArray(list) && list.length) ICE = CONFIG.ICE_SERVERS.concat(list); })
-  .catch(e => console.warn('TURN tidak tersedia', e));
 
 /* =========================================================
    BANK SOAL — answer = index jawaban benar (0 = opsi pertama)
@@ -569,7 +559,6 @@ const QUESTIONS = [
    ========================================================= */
 const $ = s => document.querySelector(s);
 const N = QUESTIONS.length;
-const PREFIX = 'larikuis-v1-';
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function show(id){ document.querySelectorAll('.screen').forEach(e => e.classList.toggle('active', e.id === id)); }
 let toastT;
@@ -580,7 +569,37 @@ function color(i){ return `hsl(${Math.round(i * 137.508) % 360} 80% 60%)`; }
 function shuffle(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function fmtTime(ms){ if (ms == null) return '—'; const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function send(conn, obj){ try { if (conn && conn.open) conn.send(obj); } catch (e) {} }
-function peerOpts(){ return { debug: 1, config: { iceServers: ICE } }; }
+
+/* =========================================================
+   JARINGAN — Supabase Realtime lewat WebSocket port 443 (tembus Wi-Fi sekolah & data seluler)
+   HP -> host: topik "<kode>-h"; host -> satu HP: "<kode>-<sid>"; host -> semua HP: "<kode>-all".
+   Kirim lewat REST broadcast supaya pengirim tidak ikut menerima pesannya sendiri:
+   kuota gratis menghitung setiap pesan yang diterima tiap perangkat (maks 100/detik).
+   ========================================================= */
+const NET = {
+  db: null, q: [], qT: 0,
+  client(){
+    if (!this.db && window.supabase && CONFIG.SUPA_KEY) this.db = supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_KEY);
+    return this.db;
+  },
+  topic: (code, k) => 'lk1-' + code + '-' + k,
+  post(messages){
+    const headers = { apikey: CONFIG.SUPA_KEY, 'Content-Type': 'application/json' };
+    if (CONFIG.SUPA_KEY.startsWith('eyJ')) headers.Authorization = 'Bearer ' + CONFIG.SUPA_KEY;
+    return fetch(CONFIG.SUPA_URL + '/realtime/v1/api/broadcast', { method: 'POST', headers, keepalive: true, body: JSON.stringify({ messages }) })
+      .catch(e => console.warn('kirim gagal', e));
+  },
+  // pesan dikumpulkan ~30 ms lalu dikirim sekaligus dalam satu request
+  push(topic, payload){
+    this.q.push({ topic, event: 'm', payload });
+    if (!this.qT) this.qT = setTimeout(() => { const m = this.q.splice(0); this.qT = 0; for (let i = 0; i < m.length; i += 50) this.post(m.slice(i, i + 50)); }, 30);
+  },
+  listen(topic, onMsg, onStatus){
+    const ch = this.client().channel(topic, { config: { broadcast: { self: false } } });
+    ch.on('broadcast', { event: 'm' }, ({ payload }) => onMsg(payload)).subscribe(s => onStatus && onStatus(s));
+    return ch;
+  }
+};
 function baseUrl(){ return location.href.split('#')[0].split('?')[0]; }
 function joinUrl(code){ return baseUrl() + '?join=' + code; }
 function store(kind, k, v){ try { const s = kind === 'l' ? localStorage : sessionStorage; if (v === undefined) return s.getItem(k); s.setItem(k, v); } catch (e) { return null; } }
@@ -637,42 +656,47 @@ function countdown(ms, done){
    ========================================================= */
 const H = { peer: null, code: '', players: [], phase: 'lobby', startAt: 0, lanes: new Map(), rows: new Map(), seen: new Set(), ending: null, clock: null };
 
-async function hostCreate(){
+function hostCreate(){
   show('host-lobby');
   $('#hl-status').textContent = 'Menyiapkan room…';
   if (location.protocol === 'file:') $('#hl-filewarn').style.display = 'block';
-  if (typeof Peer === 'undefined') { $('#hl-status').textContent = 'Library jaringan gagal dimuat. Cek internet lalu muat ulang.'; return; }
-  await ICE_READY;
-  if (H.peer) { try { H.peer.destroy(); } catch (e) {} }
-  H.code = genCode();
-  const peer = new Peer(PREFIX + H.code, peerOpts());
-  H.peer = peer;
-  peer.on('open', () => {
-    $('#hl-code').textContent = H.code;
-    $('#hl-status').textContent = 'Room siap';
-    const url = joinUrl(H.code);
-    $('#hl-url').textContent = url;
-    const box = $('#hl-qr'); box.innerHTML = '';
-    if (window.QRCode) new QRCode(box, { text: url, width: 240, height: 240, colorDark: '#0b1020', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-    else box.innerHTML = '<p style="color:#111;padding:20px">QR gagal dimuat — gunakan kode di atas.</p>';
+  if (!NET.client()) { $('#hl-status').textContent = 'Library jaringan gagal dimuat. Cek internet lalu muat ulang.'; return; }
+  if (H.ch) NET.client().removeChannel(H.ch);
+  H.code = genCode(); H.conns = new Map(); H.ready = false;
+  const code = H.code;
+  // tiap HP (sid) diwakili objek "conn" virtual, jadi logika host lama tetap dipakai apa adanya
+  H.ch = NET.listen(NET.topic(code, 'h'), m => {
+    if (!m || typeof m.sid !== 'string' || !m.d) return;
+    const sid = m.sid.slice(0, 32);
+    let c = H.conns.get(sid);
+    if (!c) { c = { sid, open: true, send: d => NET.push(NET.topic(code, sid), d), close(){ this.open = false; } }; H.conns.set(sid, c); }
+    if (m.d.t === 'bye') { hostOnClose(c); return; }
+    c.seen = Date.now(); c.open = true;
+    hostOnData(c, m.d);
+  }, s => {
+    if (s === 'SUBSCRIBED') {
+      $('#hl-status').textContent = 'Room siap';
+      if (H.ready) return;
+      H.ready = true;
+      $('#hl-code').textContent = code;
+      const url = joinUrl(code);
+      $('#hl-url').textContent = url;
+      const box = $('#hl-qr'); box.innerHTML = '';
+      if (window.QRCode) new QRCode(box, { text: url, width: 240, height: 240, colorDark: '#0b1020', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      else box.innerHTML = '<p style="color:#111;padding:20px">QR gagal dimuat — gunakan kode di atas.</p>';
+    } else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') $('#hl-status').textContent = 'Menyambung ulang…';
   });
-  peer.on('connection', conn => {
-    conn.on('data', d => hostOnData(conn, d));
-    conn.on('close', () => hostOnClose(conn));
-    conn.on('error', () => hostOnClose(conn));
-  });
-  peer.on('disconnected', () => { if (!peer.destroyed) { $('#hl-status').textContent = 'Menyambung ulang…'; peer.reconnect(); } });
-  peer.on('error', e => {
-    if (e.type === 'unavailable-id') { hostCreate(); return; }
-    if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type)) toast('Koneksi ke server sinyal terganggu, mencoba lagi…');
-    else console.warn('peer error', e.type, e);
-  });
+  // HP yang diam lebih dari 20 detik (tidak ada ping) dianggap offline
+  clearInterval(H.sweep);
+  H.sweep = setInterval(() => H.players.forEach(p => { if (p.online && p.conn && Date.now() - (p.conn.seen || 0) > 20000) hostOnClose(p.conn); }), 5000);
 }
 
 function lobbyList(){ return H.players.map(p => ({ name: p.name, color: p.color, online: p.online })); }
-function hostBroadcast(obj){ H.players.forEach(p => send(p.conn, obj)); }
-// peringkat dikirim ke tiap peserta setiap ada jawaban masuk
-function hostRanks(){ const r = ranking(); r.forEach((p, i) => send(p.conn, { t: 'rank', rank: i + 1, total: r.length })); }
+function hostBroadcast(obj){ NET.push(NET.topic(H.code, 'all'), obj); }
+// daftar lobi & peringkat disiarkan ke semua HP, jadi dibatasi supaya tidak melewati kuota pesan/detik
+function hostLobby(){ clearTimeout(H.lobbyT); H.lobbyT = setTimeout(() => hostBroadcast({ t: 'lobby', players: lobbyList() }), 1500); }
+// urutan peringkat disiarkan paling sering tiap 2 detik; tiap HP mencari posisinya sendiri
+function hostRanks(){ if (H.rankT) return; H.rankT = setTimeout(() => { H.rankT = 0; hostBroadcast({ t: 'ranks', order: ranking().map(p => p.pid) }); }, 2000); }
 function hostFeed(text, kind){
   const ol = $('#hr-feed'), li = document.createElement('li');
   li.className = kind; li.textContent = text;
@@ -710,12 +734,13 @@ function hostOnData(conn, d){
       startIn: H.phase === 'race' ? Math.max(0, H.startAt - Date.now()) : 0,
       board: H.phase === 'end' ? boardFor(p) : null
     });
-    hostBroadcast({ t: 'lobby', players: lobbyList() });
+    hostLobby();
     renderHost();
     return;
   }
   const p = H.players.find(x => x.pid === conn._pid);
   if (!p) return;
+  if (d.t === 'ping') { if (!p.online && p.conn === conn) { p.online = true; clearTimeout(p.dropT); hostLobby(); renderHost(); } return; }
   if (d.t === 'hit') {
     if (H.phase !== 'race') return;
     const id = String(d.id || '').slice(0, 24);
@@ -754,12 +779,12 @@ function hostOnClose(conn){
       if (!p.online && H.phase === 'lobby') {
         H.players = H.players.filter(x => x !== p);
         H.players.forEach((x, i) => x.color = color(i));
-        hostBroadcast({ t: 'lobby', players: lobbyList() });
+        hostLobby();
         renderHost();
       }
     }, 20000);
   }
-  hostBroadcast({ t: 'lobby', players: lobbyList() });
+  hostLobby();
   renderHost();
 }
 
@@ -796,7 +821,8 @@ function hostEnd(){
   if (H.phase !== 'race') return;
   clearTimeout(H.ending); clearInterval(H.clock);
   H.phase = 'end';
-  H.players.forEach(p => send(p.conn, Object.assign({ t: 'end' }, boardFor(p))));
+  // dikirim bertahap 10 HP per 300 ms supaya tidak melewati kuota pesan/detik
+  H.players.forEach((p, i) => setTimeout(() => send(p.conn, Object.assign({ t: 'end' }, boardFor(p))), Math.floor(i / 10) * 300));
   renderBoard();
   show('host-board');
 }
@@ -922,10 +948,10 @@ function downloadCsv(){
 /* =========================================================
    PLAYER
    ========================================================= */
-const P = { peer: null, conn: null, code: '', pid: '', name: '', color: '#fbbf24', phase: 'join',
+const P = { chs: [], sid: '', conn: null, code: '', pid: '', name: '', color: '#fbbf24', phase: 'join',
   qi: 0, score: CONFIG.START_SCORE, results: {}, outbox: [], joined: false, retryT: null };
 
-async function playerJoin(code, name){
+function playerJoin(code, name){
   P.code = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
   P.name = name;
   if (P.code.length < 4) { toast('Kode game tidak valid'); return; }
@@ -937,57 +963,39 @@ async function playerJoin(code, name){
   history.replaceState(null, '', '?join=' + P.code);
   pcStatus('Menghubungkan…', 'Menghubungi host game ' + P.code, false);
   show('p-connect');
-  if (typeof Peer === 'undefined') { pcStatus('Gagal memuat', 'Library jaringan gagal dimuat. Cek koneksi internet lalu muat ulang.', true); return; }
-  await ICE_READY;
-  if (P.peer) { try { P.peer.destroy(); } catch (e) {} }
+  if (!NET.client()) { pcStatus('Gagal memuat', 'Library jaringan gagal dimuat. Cek koneksi internet lalu muat ulang.', true); return; }
+  playerLeave();
   P.joined = false;
-  const peer = new Peer(peerOpts());
-  P.peer = peer;
-  peer.on('open', () => playerConnect());
-  peer.on('disconnected', () => { if (!peer.destroyed) setTimeout(() => { try { peer.reconnect(); } catch (e) {} }, 1000); });
-  peer.on('error', e => {
-    if (e.type === 'peer-unavailable') {
-      if (!P.joined) pcStatus('Kode tidak ditemukan', 'Game dengan kode ' + P.code + ' tidak aktif. Periksa kodenya atau minta host membuka ulang.', true);
-      else scheduleRetry();
-    } else if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type)) {
-      setConn(false); scheduleRetry();
-    } else console.warn('peer error', e.type, e);
-  });
-}
-
-function playerConnect(){
-  if (P.conn && P.conn.open) return;
-  const conn = P.peer.connect(PREFIX + P.code, { reliable: true });
-  P.conn = conn;
-  conn.on('open', () => { setConn(true); send(conn, { t: 'join', pid: P.pid, name: P.name }); });
-  conn.on('data', playerOnData);
-  const lost = () => { if (P.conn === conn && !P.kicked) { setConn(false); scheduleRetry(); } };
-  conn.on('close', lost);
-  conn.on('error', lost);
+  const sid = P.sid = rid(), room = P.code, st = {};
+  P.conn = { open: false, send: d => NET.push(NET.topic(room, 'h'), { sid, d }) };
+  // terhubung = kedua kanal (pesan pribadi + siaran) aktif; setiap tersambung ulang, kirim "join" lagi
+  const status = k => s => {
+    if (P.sid !== sid) return;
+    st[k] = s;
+    const on = st.me === 'SUBSCRIBED' && st.all === 'SUBSCRIBED';
+    if (on && !P.conn.open) { P.conn.open = true; setConn(true); send(P.conn, { t: 'join', pid: P.pid, name: P.name }); }
+    else if (!on && P.conn.open) { P.conn.open = false; setConn(false); }
+  };
+  P.chs = [NET.listen(NET.topic(room, sid), playerOnData, status('me')), NET.listen(NET.topic(room, 'all'), playerOnData, status('all'))];
+  // ping tiap 8 detik + kirim ulang jawaban/penalti yang belum dikonfirmasi host
+  P.hb = setInterval(() => { if (P.joined && P.conn.open) { send(P.conn, { t: 'ping' }); flushOutbox(); } }, 8000);
   setTimeout(() => {
-    if (P.conn === conn && !conn.open) {
-      if (!P.joined) pcStatus('Tidak bisa terhubung', 'Jaringan HP ini tidak bisa tersambung ke laptop host. Coba ganti jaringan: kalau pakai Wi-Fi, pindah ke data seluler, atau sebaliknya. Kalau link dibuka dari WhatsApp/Instagram, buka ulang di Chrome atau Safari. Lalu tekan Coba lagi.', true);
-      else scheduleRetry();
-    }
-  }, 25000);
+    if (P.sid !== sid || P.joined || P.kicked) return;
+    if (!P.conn.open) pcStatus('Tidak bisa terhubung', 'HP ini tidak bisa tersambung ke server game. Cek koneksi internet, coba ganti Wi-Fi atau data seluler, lalu tekan Coba lagi.', true);
+    else pcStatus('Game tidak ditemukan', 'Tidak ada balasan dari host dengan kode ' + room + '. Periksa kodenya dan pastikan layar host masih terbuka, lalu tekan Coba lagi.', true);
+  }, 12000);
 }
 
-function scheduleRetry(){
-  clearTimeout(P.retryT);
-  P.retryT = setTimeout(() => {
-    if (P.conn && P.conn.open) return;
-    if (P.peer && !P.peer.destroyed) {
-      if (P.peer.disconnected) { try { P.peer.reconnect(); } catch (e) {} }
-      else playerConnect();
-    }
-    scheduleRetry();
-  }, 3000);
+function playerLeave(){
+  clearInterval(P.hb);
+  P.chs.forEach(c => { try { NET.client().removeChannel(c); } catch (e) {} });
+  P.chs = []; P.sid = '';
+  if (P.conn) P.conn.open = false;
 }
 
 function setConn(on){
   const c = $('#hud-conn'); c.classList.toggle('off', !on); c.querySelector('span').textContent = on ? 'Online' : 'Offline';
   $('#p-banner').classList.toggle('show', !on && P.joined && P.phase === 'race');
-  if (on) clearTimeout(P.retryT);
 }
 
 function pcStatus(title, msg, failed){
@@ -1027,8 +1035,9 @@ function playerOnData(d){
       P.qi = 0; P.score = CONFIG.START_SCORE; P.results = {}; P.outbox = [];
       startRace(d.startIn);
       break;
-    case 'rank': {
-      const prev = P.rank; P.rank = d.rank; P.total = d.total; updateRank(prev);
+    case 'ranks': {
+      const i = Array.isArray(d.order) ? d.order.indexOf(P.pid) : -1;
+      if (i >= 0) { const prev = P.rank; P.rank = i + 1; P.total = d.order.length; updateRank(prev); }
       break;
     }
     case 'hitok':
@@ -1036,8 +1045,7 @@ function playerOnData(d){
       if (typeof d.score === 'number') { P.score = d.score; updateHud(); }
       break;
     case 'kicked':
-      P.kicked = true; P.joined = false; clearTimeout(P.retryT);
-      try { P.peer.destroy(); } catch (e) {}
+      P.kicked = true; P.joined = false; playerLeave();
       G.stop(); closeQuestion(true);
       pcStatus('Kamu masuk dari perangkat lain', 'Nama ini baru saja dipakai masuk dari HP atau tab lain, jadi sambungan di sini ditutup.', true); show('p-connect');
       break;
@@ -1591,9 +1599,11 @@ $('#btn-join').onclick = () => playerJoin($('#code-input').value.trim(), $('#nam
 $('#name-input').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
 $('#code-input').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
 $('#pc-retry').onclick = () => playerJoin(P.code, P.name);
-$('#pc-back').onclick = () => { if (P.peer) try { P.peer.destroy(); } catch (e) {} history.replaceState(null, '', baseUrl()); show('home'); };
+// beri tahu host saat tab ditutup, supaya statusnya langsung offline
+window.addEventListener('pagehide', () => { if (P.joined && P.sid) NET.post([{ topic: NET.topic(P.code, 'h'), event: 'm', payload: { sid: P.sid, d: { t: 'bye' } } }]); });
+$('#pc-back').onclick = () => { playerLeave(); history.replaceState(null, '', baseUrl()); show('home'); };
 $('#q-next').onclick = continueRun;
-window.addEventListener('beforeunload', e => { if (H.peer && H.phase !== 'end' && H.players.length) { e.preventDefault(); e.returnValue = ''; } });
+window.addEventListener('beforeunload', e => { if (H.ch && H.phase !== 'end' && H.players.length) { e.preventDefault(); e.returnValue = ''; } });
 
 (function boot(){
   const params = new URLSearchParams(location.search);
