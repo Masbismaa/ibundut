@@ -145,7 +145,9 @@ td.num,th.num{text-align:right}
 .conn{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:6px}
 .conn i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
 .conn.off i{background:var(--bad)}
-#cv{display:block;width:100%;height:100%}
+#cv{display:block;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none}
+.ctl-hint{position:absolute;left:50%;bottom:max(28px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:6;background:rgba(28,39,51,.8);color:#fff;padding:10px 16px;border-radius:6px;font-size:15px;font-weight:600;text-align:center;width:max-content;max-width:calc(100% - 32px);pointer-events:none;opacity:0;transition:opacity .4s}
+.ctl-hint.show{opacity:1}
 .delta{position:absolute;left:50%;top:34%;font-family:var(--display);font-stretch:75%;font-variation-settings:"wdth" 75;font-size:60px;font-weight:900;z-index:6;pointer-events:none;text-shadow:0 2px 0 #fff;animation:rise 1.2s forwards}
 @keyframes rise{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-80px);opacity:0}}
 
@@ -298,6 +300,7 @@ td.num,th.num{text-align:right}
     <div class="scorebox"><small>Skor</small><b id="hud-score">50</b><div class="pips" id="hud-pips"></div></div>
     <div class="scorebox" style="text-align:right"><small>Gawang</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div></div>
   </div>
+  <div class="ctl-hint" id="ctl-hint">Geser kiri/kanan untuk pindah jalur, tap untuk lompat</div>
   <div class="banner" id="p-banner">Koneksi ke host terputus — mencoba lagi…</div>
 
   <div class="qsheet" id="qsheet">
@@ -624,7 +627,7 @@ function downloadCsv(){
   ranking().forEach((p, i) => rows.push([i + 1, p.name, p.correct, p.answered - p.correct, p.done ? fmtTime(p.finishMs) : '-', p.score]));
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+  a.href = URL.createObjectURL(new Blob(['\uFEFF' + csv], { type: 'text/csv' }));
   a.download = `leaderboard-larikuis-${H.code}.csv`;
   a.click();
 }
@@ -874,14 +877,14 @@ function showPlayerBoard(b){
    RUNNER 3D (three.js) — logika lari tetap jalan walau WebGL gagal
    ========================================================= */
 const G = {
-  SPEED: 9, GAP: 24, STOP: 4, JUMP_T: 0.72, JUMP_H: 1.35, CROUCH: 0.1, FALL_T: 1.6,
-  state: 'idle', dist: 0, v: 0, t: 0, ph: 0, jy: 0, raf: 0, last: 0,
+  SPEED: 9, GAP: 34, STOP: 12, JUMP_T: 0.72, JUMP_H: 1.35, CROUCH: 0.1, FALL_T: 1.6, LANE: 1.2,
+  state: 'idle', dist: 0, v: 0, t: 0, ph: 0, jy: 0, raf: 0, last: 0, lane: 0, x: 0, stumble: 0, cones: [],
   obs: null, finishX: null, jump: null, fall: null, land: 0, cheer: 0, shake: 0, r: null,
 
   init(){
     if (!this._tried) { this._tried = true; if (window.THREE) try { this.setup(); } catch (e) { console.warn('3D tidak tersedia', e); } }
     this.resize();
-    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true });
+    Object.assign(this, { dist: 0, v: 0, t: 0, ph: 0, jy: 0, lane: 0, x: 0, stumble: 0, jump: null, fall: null, land: 0, cheer: 0, shake: 0, obs: null, finishX: null, state: 'idle', _pending: false, _snap: true, auto: !this.r });
     if (this.r) { this.paintRunner(); this.fin.visible = false; this.fx.forEach(m => m.visible = false); }
     this.spawnNext();
     cancelAnimationFrame(this.raf);
@@ -889,6 +892,12 @@ const G = {
     this.raf = requestAnimationFrame(t => this.loop(t));
   },
   spawnNext(){
+    // 3 baris cone di depan; tiap baris menutup 1–2 jalur, selalu ada 1 jalur kosong
+    this.cones = [];
+    for (let r = 0; r < 3; r++) {
+      const free = Math.floor(Math.random() * 3) - 1, lanes = [-1, 0, 1].filter(l => l !== free);
+      (Math.random() < .5 ? lanes : [lanes[Math.random() < .5 ? 0 : 1]]).forEach(lane => this.cones.push({ z: this.dist + 6 + r * 6, lane, hit: false, tip: 0 }));
+    }
     if (P.qi < N) {
       this.obs = { x: this.dist + this.GAP, qi: P.qi, asked: false, ok: false, jumped: false, hit: false, fall: 0 };
       if (this.r) this.drawMarker(P.qi);
@@ -897,8 +906,14 @@ const G = {
       if (this.r) { this.fin.visible = true; this.fin.position.z = -this.finishX; }
     }
   },
-  run(){ if (this.state === 'idle') this.state = 'run'; },
-  resume(ok){ if (this.obs) this.obs.ok = ok; this.state = 'run'; this._pending = true; },
+  run(){
+    if (this.state !== 'idle') return;
+    this.state = 'run';
+    const h = $('#ctl-hint'); h.classList.add('show'); clearTimeout(this._hintT); this._hintT = setTimeout(() => h.classList.remove('show'), 4500);
+  },
+  resume(ok){ if (this.obs) this.obs.ok = ok; this.state = 'run'; this._pending = true; if (ok && this.r) this.drawMarker(0, true); },
+  jumpNow(){ if (this.state !== 'run' || this.jump || this.fall) return false; this.jump = { t: -this.CROUCH }; return true; },
+  moveLane(d){ if (this.state !== 'run' || this.fall) return false; this.lane = Math.max(-1, Math.min(1, this.lane + d)); return true; },
   stop(){ cancelAnimationFrame(this.raf); this.state = 'idle'; },
   loop(now){
     const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now; this.t += dt;
@@ -909,10 +924,13 @@ const G = {
   // logika murni (tanpa three.js): kecepatan halus, berhenti sebelum rintangan, lompat / jatuh
   step(dt){
     const o = this.obs;
-    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED) : this.state === 'finished' ? 2.5 : 0;
+    const target = this.state === 'run' ? (this.fall ? 0 : this.SPEED * (this.stumble > 0 ? 0.4 : 1)) : this.state === 'finished' ? 2.5 : 0;
     this.v += (target - this.v) * (1 - Math.exp(-(target > this.v ? 3 : 5) * dt));
+    const before = this.dist;
     this.dist += this.v * dt;
+    this.x += (this.lane * this.LANE - this.x) * (1 - Math.exp(-12 * dt));
     if (this.fall && (this.fall.t += dt) >= this.FALL_T) this.fall = null;
+    if (this.stumble > 0) this.stumble = Math.max(0, this.stumble - dt);
     this.land *= Math.exp(-9 * dt);
     const j = this.jump;
     if (j) {
@@ -927,11 +945,13 @@ const G = {
       if (o && !o.asked && o.x - this.dist <= this.STOP + this.v / 5) { o.asked = true; this.state = 'question'; openQuestion(o.qi); }
       else if (o && o.asked && this._pending) {
         const gap = o.x - this.dist;
-        // tolakan diatur supaya puncak lompatan tepat di atas rintangan
-        if (o.ok && !o.jumped && gap <= Math.max(0.8, this.v * (this.CROUCH + this.JUMP_T / 2))) { o.jumped = true; this.jump = { t: -this.CROUCH }; this.burst(26); }
-        if (!o.ok && !o.hit && gap <= 0.45) { o.hit = true; this.fall = { t: 0 }; }
+        // tanpa WebGL pemain tak bisa melihat gawang, jadi lompat otomatis
+        if (this.auto && o.ok && gap <= Math.max(0.8, this.v * (this.CROUCH + this.JUMP_T / 2))) this.jumpNow();
+        // benar + sedang di udara = lolos; selain itu menabrak dan jatuh (poin tidak berubah)
+        if (!o.done && gap <= 0.3) { o.done = true; if (o.ok && this.jy > 0.8) this.burst(26); else { o.hit = true; this.jump = null; this.jy = 0; this.fall = { t: 0 }; } }
         if (gap < -10) { this._pending = false; this.spawnNext(); }
       }
+      for (const c of this.cones) if (!c.hit && before < c.z && this.dist >= c.z && Math.abs(this.x - c.lane * this.LANE) < 0.6 && this.jy < 0.5) { c.hit = true; this.stumble = 0.6; }
       if (this.finishX !== null && this.dist >= this.finishX) { this.state = 'finished'; this.burst(70); finishRace(); }
     }
   },
@@ -993,15 +1013,39 @@ const G = {
     const white = new T.MeshStandardMaterial({ color: '#f1f5f9', roughness: .5 });
     const hurdle = this.hurdle = new T.Group();
     const post = new T.CylinderGeometry(.035, .035, .9, 8), footG = new T.BoxGeometry(.06, .05, .5);
-    [-.75, .75].forEach(x => {
+    [-1.7, 1.7].forEach(x => {
       const a = new T.Mesh(post, white); a.position.set(x, .45, 0); hurdle.add(a);
       const b = new T.Mesh(footG, white); b.position.set(x, .025, .2); hurdle.add(b);
     });
-    const barTex = this.tex(64, 8, (c, w, h) => { for (let i = 0; i < 8; i++) { c.fillStyle = i % 2 ? '#fff' : '#ef4444'; c.fillRect(i * 8, 0, 8, h); } });
-    const bar = new T.Mesh(new T.BoxGeometry(1.6, .16, .05), new T.MeshStandardMaterial({ map: barTex })); bar.position.y = .85; hurdle.add(bar);
+    const barTex = this.tex(128, 8, (c, w, h) => { for (let i = 0; i < 16; i++) { c.fillStyle = i % 2 ? '#fff' : '#ef4444'; c.fillRect(i * 8, 0, 8, h); } });
+    const bar = new T.Mesh(new T.BoxGeometry(3.4, .16, .05), new T.MeshStandardMaterial({ map: barTex })); bar.position.y = .85; hurdle.add(bar);
     hurdle.traverse(m => m.castShadow = true);
     this.marker = new T.Sprite(new T.SpriteMaterial({ map: this.tex(128, 128) }));
     scene.add(hurdle, this.marker);
+
+    // cone: pool 6 buah, diposisikan ulang tiap segmen
+    const orange = new T.MeshStandardMaterial({ color: '#f97316', roughness: .6 });
+    const coneG = new T.ConeGeometry(.2, .55, 16), bandG = new T.CylinderGeometry(.11, .14, .09, 16), baseG = new T.BoxGeometry(.42, .04, .42);
+    this.coneMesh = [];
+    for (let i = 0; i < 6; i++) {
+      const g = new T.Group();
+      [[coneG, orange, .3], [bandG, white, .32], [baseG, orange, .02]].forEach(([geo, mat, y]) => { const m = new T.Mesh(geo, mat); m.position.y = y; m.castShadow = true; g.add(m); });
+      g.visible = false; scene.add(g); this.coneMesh.push(g);
+    }
+
+    // kontrol: swipe kiri/kanan = pindah jalur, tap = lompat; keyboard ←/→/A/D dan Spasi/↑/W
+    const cv = $('#cv'); let sx = 0, sy = 0;
+    cv.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; });
+    cv.addEventListener('pointerup', e => {
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) this.moveLane(dx > 0 ? 1 : -1); else this.jumpNow();
+    });
+    window.addEventListener('keydown', e => {
+      if (!$('#p-game').classList.contains('active')) return;
+      const k = e.key.toLowerCase();
+      const done = k === 'arrowleft' || k === 'a' ? this.moveLane(-1) : k === 'arrowright' || k === 'd' ? this.moveLane(1) : k === ' ' || k === 'arrowup' || k === 'w' ? this.jumpNow() : false;
+      if (done) e.preventDefault(); // hanya saat lari, supaya Spasi tetap bisa menekan tombol "Lanjut lari"
+    });
 
     // gapura finish
     const fin = this.fin = new T.Group();
@@ -1058,11 +1102,16 @@ const G = {
     c.fillStyle = '#fff'; c.fillText(P.name, 256, 34);
     t.needsUpdate = true;
   },
-  drawMarker(qi){
+  drawMarker(qi, hint){
     const t = this.marker.material.map, c = t.image.getContext('2d');
     c.clearRect(0, 0, 128, 128);
-    c.fillStyle = '#fbbf24'; c.beginPath(); c.moveTo(36, 30); c.arcTo(114, 30, 114, 120, 22); c.arcTo(114, 120, 14, 120, 22); c.arcTo(14, 120, 14, 30, 22); c.arcTo(14, 30, 114, 30, 22); c.fill();
+    c.fillStyle = hint ? '#2f8a3e' : '#fbbf24'; c.beginPath(); c.moveTo(36, 30); c.arcTo(114, 30, 114, 120, 22); c.arcTo(114, 120, 14, 120, 22); c.arcTo(14, 120, 14, 30, 22); c.arcTo(14, 30, 114, 30, 22); c.fill();
     c.textAlign = 'center'; c.textBaseline = 'middle';
+    if (hint) {
+      c.fillStyle = '#fff'; c.font = '900 30px "Archivo",sans-serif'; c.fillText('LOMPAT', 64, 66);
+      c.font = '600 17px "Archivo",sans-serif'; c.fillText('tap / spasi', 64, 96);
+      t.needsUpdate = true; return;
+    }
     c.fillStyle = '#1a1203'; c.font = '800 72px "Archivo",sans-serif'; c.fillText('?', 64, 78);
     c.font = '800 24px "Archivo",sans-serif'; c.lineWidth = 6; c.strokeStyle = '#1a1203'; c.strokeText(`${qi + 1}/${N}`, 64, 14);
     c.fillStyle = '#fff'; c.fillText(`${qi + 1}/${N}`, 64, 14);
@@ -1120,10 +1169,13 @@ const G = {
       sh[i] = mix(mix(sh[i], 2.7 + Math.sin(i * 2) * 0.2, down), 0.6, rise); el[i] = mix(el[i], 0.25, down);
       sh[i] = mix(sh[i], 2.9, this.cheer); el[i] = mix(el[i], 0.15, this.cheer);
     }
-    const lean = -0.1 - 0.22 * run - 0.3 * crouch - 0.45 * air - 0.3 * rise + 0.12 * this.cheer;
+    const st = this.stumble > 0 ? Math.sin(Math.PI * (1 - this.stumble / 0.6)) : 0;
+    const lean = -0.1 - 0.22 * run - 0.3 * crouch - 0.45 * air - 0.3 * rise - 0.35 * st + 0.12 * this.cheer;
     const bob = Math.abs(Math.cos(this.ph)) * 0.06 * run * (1 - air) + Math.abs(Math.sin(t * 9)) * 0.18 * this.cheer;
-    R.root.position.set(0, this.jy + 0.17 * down, rz);
+    R.root.position.set(this.x, this.jy + 0.17 * down, rz);
     R.root.rotation.x = -1.42 * down + 0.12 * bump;
+    // condong ke arah pindah jalur, goyang saat tersandung cone
+    R.root.rotation.z = -(this.lane * this.LANE - this.x) * 0.3 + Math.sin(t * 20) * 0.15 * st;
     R.hips.position.y = 0.95 - (0.18 * crouch + 0.16 * this.land + 0.28 * rise) + bob;
     R.torso.rotation.x = lean;
     R.head.rotation.x = -lean * 0.6 + 0.5 * down;
@@ -1136,10 +1188,20 @@ const G = {
       if (o.hit) o.fall = Math.min(1, o.fall + dt * 3.2);
       this.hurdle.position.z = -o.x;
       this.hurdle.rotation.x = -1.45 * (1 - Math.pow(1 - o.fall, 3));
-      const mk = this.marker, sc = mix(mk.scale.x, o.asked ? 0 : 0.9, 1 - Math.exp(-10 * dt));
+      // "?" sebelum ditanya; "LOMPAT" selama ancang-ancang setelah jawaban benar
+      const show = !o.asked || (o.ok && this._pending && !o.done);
+      const mk = this.marker, sc = mix(mk.scale.x, show ? 0.9 : 0, 1 - Math.exp(-10 * dt));
       mk.scale.set(sc, sc, 1); mk.visible = sc > 0.02;
       mk.position.set(0, 1.6 + Math.sin(t * 3) * 0.1, -o.x);
     }
+    this.coneMesh.forEach((m, i) => {
+      const c = this.cones[i];
+      m.visible = !!c;
+      if (!c) return;
+      if (c.hit) c.tip = Math.min(1, c.tip + dt * 4);
+      m.position.set(c.lane * this.LANE, 0, -c.z - c.tip * 0.8);
+      m.rotation.x = -1.4 * c.tip;
+    });
     this.fx.forEach(m => {
       if (!m.visible) return;
       const u = m.userData; u.life -= dt;
@@ -1150,10 +1212,12 @@ const G = {
     // kamera mengikuti dengan halus; saat hitung mundur berayun dari depan ke belakang pelari
     const C = this.cam, portrait = C.aspect < 1;
     if (this._snap) { this._snap = false; C.position.set(3.6, 2.1, rz - 6.5); this.look.set(0, 1.2, rz); }
-    const goal = this._v1.set(portrait ? 1.7 : 2.6, (portrait ? 3.1 : 2.4) + this.jy * 0.35, rz + (portrait ? 6.8 : 5.6));
-    const aim = this._v2.set(0, 1.1 + this.jy * 0.45, rz - 5);
-    const kc = 1 - Math.exp(-(this.state === 'idle' ? 1.3 : 5) * dt);
+    // di belakang pelari (sedikit ke kanan) supaya ketiga jalur terlihat
+    const goal = this._v1.set((portrait ? 0.4 : 0.8) + this.x * 0.7, (portrait ? 3.4 : 2.9) + this.jy * 0.35, rz + (portrait ? 7 : 6.2));
+    const aim = this._v2.set(this.x * 0.8, 1.1 + this.jy * 0.45, rz - 6);
+    const idle = this.state === 'idle', kc = 1 - Math.exp(-(idle ? 1.3 : 5) * dt);
     C.position.lerp(goal, kc); this.look.lerp(aim, kc);
+    if (!idle) { C.position.z = goal.z; this.look.z = aim.z; } // z tanpa lag: framing tetap stabil saat ngebut
     this.shake *= Math.exp(-6 * dt); // guncangan kecil saat badan menghantam lintasan
     C.lookAt(this._v2.copy(this.look).add(this._v1.set((Math.random() - .5) * .3 * this.shake, (Math.random() - .5) * .3 * this.shake, 0)));
     const fov = (portrait ? 66 : 52) + 6 * run;
