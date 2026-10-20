@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Lari Kuis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#0b1020; --panel:#141b33; --panel2:#1c2547; --line:#2a3563;
+  --text:#eef2ff; --muted:#9aa6d1; --accent:#fbbf24; --accent2:#f97316;
+  --ok:#22c55e; --bad:#ef4444; --blue:#60a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:"Plus Jakarta Sans",system-ui,sans-serif;overflow-x:hidden}
+button{font:inherit;cursor:pointer;border:0}
+input{font:inherit}
+.screen{display:none;min-height:100dvh}
+.screen.active{display:flex}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:24px 16px}
+.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1203;font-weight:800;padding:14px 22px;border-radius:14px;font-size:17px;box-shadow:0 6px 0 #9a3412;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #9a3412}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--panel2);color:var(--text);box-shadow:0 6px 0 #0a0f22}
+.btn.small{padding:9px 14px;font-size:14px;border-radius:10px;box-shadow:0 4px 0 #9a3412}
+.btn.ghost.small{box-shadow:0 4px 0 #0a0f22}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px}
+.muted{color:var(--muted)}
+h1{font-size:clamp(30px,6vw,56px);line-height:1.05;font-weight:800;letter-spacing:-.02em}
+h2{font-size:22px;font-weight:800}
+.field{display:block;margin-top:14px}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.field input{width:100%;background:var(--bg);border:2px solid var(--line);color:var(--text);border-radius:12px;padding:13px 14px;font-size:18px;outline:none}
+.field input:focus{border-color:var(--accent)}
+#code-input{text-transform:uppercase;letter-spacing:.3em;font-weight:800;text-align:center;font-size:24px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#111827;border:1px solid var(--line);padding:12px 18px;border-radius:12px;z-index:99;transition:transform .25s;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* HOME */
+#home{align-items:center;background:radial-gradient(1200px 600px at 80% -10%,#4c1d95 0%,transparent 60%),radial-gradient(900px 500px at -10% 110%,#9a3412 0%,transparent 60%),var(--bg)}
+.home-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:center}
+.tag{display:inline-block;background:rgba(251,191,36,.12);color:var(--accent);border:1px solid rgba(251,191,36,.35);padding:6px 12px;border-radius:99px;font-size:13px;font-weight:700;margin-bottom:16px}
+.rules{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.rule{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:12px}
+.rule b{display:block;font-size:24px}
+.rule small{color:var(--muted)}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);margin:18px 0;font-size:13px}
+.or:before,.or:after{content:"";flex:1;height:1px;background:var(--line)}
+@media (max-width:820px){.home-grid{grid-template-columns:1fr}.rules{grid-template-columns:repeat(3,1fr)}}
+
+/* HOST LOBBY */
+#host-lobby .wrap,#host-race .wrap,#host-board .wrap{display:flex;flex-direction:column;gap:18px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.lobby-grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
+.joinbox{text-align:center}
+.bigcode{font-size:56px;font-weight:800;letter-spacing:.18em;color:var(--accent);margin:6px 0 12px}
+#hl-qr{background:#fff;border-radius:16px;padding:14px;display:inline-block;min-width:268px;min-height:268px}
+#hl-qr img,#hl-qr canvas{display:block}
+#hl-url{font-size:12px;word-break:break-all;margin-top:10px}
+.warn{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:#fecaca;padding:10px 12px;border-radius:12px;font-size:13px;margin-top:12px;text-align:left}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;align-content:flex-start;min-height:120px}
+.chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);padding:9px 14px;border-radius:99px;font-weight:700}
+.chip.off{opacity:.4}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;flex:none}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.count{font-size:40px;font-weight:800}
+@media (max-width:860px){.lobby-grid{grid-template-columns:1fr}}
+
+/* HOST RACE */
+.race-grid{display:grid;grid-template-columns:1fr 300px;gap:18px}
+.lanes{display:flex;flex-direction:column;gap:12px}
+.lane{display:grid;grid-template-columns:140px 1fr 56px;align-items:center;gap:10px;transition:opacity .3s}
+.lane.off{opacity:.4}
+.lane-name{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lane-track{position:relative;height:34px;border-radius:10px;background:
+  repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(251,191,36,.55) calc(10% - 2px) 10%),
+  linear-gradient(180deg,#9a3412,#7c2d12);border:1px solid #431407;overflow:visible}
+.lane-track:after{content:"";position:absolute;right:0;top:0;bottom:0;width:10px;background:repeating-conic-gradient(#fff 0 25%,#111 0 50%) 0 0/10px 10px;border-radius:0 10px 10px 0}
+.lane-runner{position:absolute;z-index:1;isolation:isolate;top:50%;transform:translate(-50%,-50%);transition:left .9s cubic-bezier(.3,1.4,.5,1);font-size:24px;filter:drop-shadow(0 0 6px var(--c))}
+.lane-runner span{display:inline-block;transform:scaleX(-1)}
+.lane-runner i{position:absolute;inset:-4px -6px;border-radius:50%;background:var(--c);opacity:.55;z-index:-1}
+.lane-score{font-weight:800;text-align:right;font-size:18px}
+.rank-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.rank-row{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--panel2)}
+.rank-row b{font-size:15px}
+.rank-row .n{color:var(--muted);font-weight:800}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);padding:8px 14px;border-radius:99px;font-weight:700}
+@media (max-width:860px){.race-grid{grid-template-columns:1fr}.lane{grid-template-columns:90px 1fr 44px}}
+
+/* COUNTDOWN */
+.countdown{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(5,8,20,.75);z-index:50;font-size:160px;font-weight:800;color:var(--accent);text-shadow:0 10px 0 #9a3412}
+.countdown.show{display:flex}
+.countdown span{animation:cd .9s ease-out}
+@keyframes cd{from{transform:scale(1.8);opacity:0}30%{opacity:1}to{transform:scale(.9)}}
+
+/* BOARD */
+.podium{display:flex;justify-content:center;align-items:flex-end;gap:14px;margin:10px 0 6px}
+.pod{width:180px;text-align:center}
+.pod .bar{border-radius:14px 14px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:12px;font-size:40px;font-weight:800;color:#1a1203}
+.pod .nm{font-weight:800;font-size:18px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod .sc{color:var(--accent);font-weight:800;font-size:22px;margin-bottom:8px}
+.p1 .bar{height:180px;background:linear-gradient(#fde047,#f59e0b)}
+.p2 .bar{height:130px;background:linear-gradient(#e5e7eb,#9ca3af)}
+.p3 .bar{height:95px;background:linear-gradient(#fdba74,#c2410c)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:13px;font-weight:700}
+td.num,th.num{text-align:right}
+
+/* PLAYER */
+.pcenter{align-items:center;justify-content:center;text-align:center;padding:24px 16px}
+.pcenter .card{width:100%;max-width:420px}
+.spinner{width:44px;height:44px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:10px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:34px;border:4px solid #fff}
+
+#p-game{flex-direction:column;position:relative;height:100dvh;overflow:hidden;background:#1e1b4b}
+.hud{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:flex-start;padding:max(12px,env(safe-area-inset-top)) 14px 0;pointer-events:none}
+.hud .scorebox{background:rgba(11,16,32,.75);border:1px solid var(--line);border-radius:14px;padding:8px 14px;backdrop-filter:blur(6px)}
+.hud .scorebox small{display:block;color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.08em}
+.hud .scorebox b{font-size:28px;font-weight:800}
+.pips{display:flex;gap:4px;margin-top:8px}
+.pip{width:14px;height:8px;border-radius:4px;background:rgba(255,255,255,.18)}
+.pip.ok{background:var(--ok)}.pip.bad{background:var(--bad)}
+.conn{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:6px}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.conn.off i{background:var(--bad)}
+#cv{display:block;width:100%;height:100%}
+.delta{position:absolute;left:24%;top:38%;font-size:44px;font-weight:800;z-index:6;pointer-events:none;animation:rise 1.2s forwards}
+@keyframes rise{from{transform:translateY(0);opacity:1}to{transform:translateY(-90px);opacity:0}}
+
+.qsheet{position:absolute;left:0;right:0;bottom:0;z-index:10;background:var(--panel);border-top:1px solid var(--line);border-radius:22px 22px 0 0;padding:18px 16px max(18px,env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.9,.3,1.1);max-height:88dvh;overflow-y:auto;box-shadow:0 -20px 40px rgba(0,0,0,.4)}
+.qsheet.show{transform:translateY(0)}
+.qhead{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--accent);letter-spacing:.05em}
+.qtimer{height:6px;background:var(--line);border-radius:4px;margin:10px 0 14px;overflow:hidden}
+.qtimer div{height:100%;width:100%;background:linear-gradient(90deg,var(--ok),var(--accent));border-radius:4px}
+.qtext{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:14px}
+.qopts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:flex-start;gap:12px;text-align:left;background:var(--panel2);color:var(--text);border:2px solid var(--line);border-radius:14px;padding:13px 14px;font-size:15px;font-weight:600;line-height:1.35;transition:border-color .15s,background .15s}
+.opt b{flex:none;width:28px;height:28px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent)}
+.opt:active{transform:scale(.99)}
+.opt.ok{border-color:var(--ok);background:rgba(34,197,94,.15)}
+.opt.bad{border-color:var(--bad);background:rgba(239,68,68,.15)}
+.opt:disabled{cursor:default}
+.qfb{display:none;margin-top:14px;padding:14px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.qfb.show{display:block}
+.qfb h3{font-size:20px;margin-bottom:6px}
+.qfb p{font-size:14px;color:var(--muted);line-height:1.5}
+.qfb .btn{width:100%;margin-top:12px}
+
+.overlay{position:absolute;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(5,8,20,.72);padding:16px;text-align:center}
+.overlay.show{display:flex}
+.overlay .card{max-width:380px;width:100%}
+.big{font-size:54px;font-weight:800;color:var(--accent)}
+.myrank{font-size:72px;font-weight:800;color:var(--accent);line-height:1}
+.banner{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:var(--bad);color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;z-index:30;display:none}
+.banner.show{display:block}
+</style>
+</head>
+<body>
+
+<!-- ============ HOME ============ -->
+<section class="screen" id="home">
+  <div class="wrap home-grid">
+    <div>
+      <span class="tag">🏃 Kuis Lari Rintangan · maks 20 peserta</span>
+      <h1>Lari Kuis<br><span style="color:var(--accent)">Laporan Keuangan</span></h1>
+      <p class="muted" style="margin-top:14px;font-size:17px;line-height:1.6">Setiap rintangan = satu pertanyaan tentang keputusan &amp; kegiatan perusahaan dalam laporan keuangan. Jawab benar untuk melompat, raih skor tertinggi!</p>
+      <div class="rules">
+        <div class="rule"><b>50</b><small>poin awal</small></div>
+        <div class="rule"><b style="color:var(--ok)">+10</b><small>jawaban benar</small></div>
+        <div class="rule"><b style="color:var(--bad)">−5</b><small>salah / waktu habis</small></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Gabung sebagai peserta</h2>
+      <label class="field"><span>Kode game</span><input id="code-input" maxlength="6" autocomplete="off" placeholder="ABC123"></label>
+      <label class="field"><span>Nama kamu</span><input id="name-input" maxlength="20" autocomplete="off" placeholder="mis. Rina"></label>
+      <button class="btn" style="width:100%;margin-top:16px" id="btn-join">Gabung ▶</button>
+      <div class="or">atau</div>
+      <button class="btn ghost" style="width:100%" id="btn-host">🖥️ Buat game (layar host)</button>
+      <p class="muted" style="font-size:12px;margin-top:10px;text-align:center">Buka mode host di laptop/proyektor, peserta scan QR dari HP.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOST LOBBY ============ -->
+<section class="screen" id="host-lobby">
+  <div class="wrap">
+    <div class="topbar">
+      <h2>Lobi Game · Lari Kuis</h2>
+      <span class="pill" id="hl-status">⏳ Menyiapkan room…</span>
+    </div>
+    <div class="lobby-grid">
+      <div class="card joinbox">
+        <div class="muted" style="font-weight:700">Scan QR atau masukkan kode</div>
+        <div class="bigcode" id="hl-code">······</div>
+        <div id="hl-qr"></div>
+        <div class="muted" id="hl-url"></div>
+        <div class="warn" id="hl-filewarn" style="display:none">File dibuka langsung dari komputer (file://), jadi QR tidak bisa dibuka di HP. Hosting file ini dulu (mis. GitHub Pages / Netlify) lalu buka lewat https.</div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column">
+        <div class="topbar">
+          <div><span class="count" id="hl-count">0</span><span class="muted" style="font-weight:700"> / 20 peserta</span></div>
+          <button class="btn" id="btn-start" disabled>Mulai Lomba 🏁</button>
+        </div>
+        <div class="chips" id="hl-players"><span class="muted">Menunggu peserta bergabung…</span></div>
+        <p class="muted" style="font-size:13px;margin-top:auto;padding-top:14px">10 rintangan · 20 detik per soal · urutan jawaban diacak per peserta.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOST RACE ============ -->
+<section class="screen" id="host-race">
+  <div class="wrap">
+    <div class="topbar">
+      <h2>🏃 Lomba berlangsung</h2>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="pill">Kode <b style="color:var(--accent);letter-spacing:.1em" id="hr-code"></b></span>
+        <span class="pill" id="hr-done">0/0 finish</span>
+        <button class="btn small" id="btn-end">Akhiri &amp; Leaderboard</button>
+      </div>
+    </div>
+    <div class="race-grid">
+      <div class="card"><div class="lanes" id="hr-lanes"></div></div>
+      <div class="card">
+        <h2>Skor sementara</h2>
+        <div class="rank-list" id="hr-rank"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOST BOARD ============ -->
+<section class="screen" id="host-board">
+  <div class="wrap">
+    <div class="topbar">
+      <h2>🏆 Leaderboard</h2>
+      <div style="display:flex;gap:10px">
+        <button class="btn ghost small" id="btn-csv">Unduh CSV</button>
+        <button class="btn small" id="btn-again">Main lagi</button>
+      </div>
+    </div>
+    <div class="podium" id="hb-podium"></div>
+    <div class="card"><table><thead><tr><th>#</th><th>Nama</th><th class="num">Benar</th><th class="num">Waktu</th><th class="num">Skor</th></tr></thead><tbody id="hb-table"></tbody></table></div>
+  </div>
+</section>
+
+<!-- ============ PLAYER: CONNECT ============ -->
+<section class="screen pcenter" id="p-connect">
+  <div class="card">
+    <div class="spinner"></div>
+    <h2 id="pc-title">Menghubungkan…</h2>
+    <p class="muted" id="pc-msg" style="margin-top:8px">Menghubungi host game</p>
+    <button class="btn ghost" style="margin-top:16px;display:none" id="pc-back">Kembali</button>
+  </div>
+</section>
+
+<!-- ============ PLAYER: WAIT ============ -->
+<section class="screen pcenter" id="p-wait">
+  <div class="card">
+    <div class="avatar" id="pw-avatar">🏃</div>
+    <h2>Halo, <span id="pw-name"></span>!</h2>
+    <p class="muted" style="margin-top:6px">Kamu sudah masuk. Tunggu host memulai lomba…</p>
+    <div class="spinner" style="width:28px;height:28px;border-width:3px"></div>
+    <div class="muted" style="font-weight:700;margin-top:6px"><span id="pw-count">0</span> peserta di lobi</div>
+    <div class="chips" id="pw-players" style="justify-content:center;min-height:0"></div>
+  </div>
+</section>
+
+<!-- ============ PLAYER: GAME ============ -->
+<section class="screen" id="p-game">
+  <canvas id="cv"></canvas>
+  <div class="hud">
+    <div class="scorebox"><small>SKOR</small><b id="hud-score">50</b><div class="pips" id="hud-pips"></div></div>
+    <div class="scorebox" style="text-align:right"><small>RINTANGAN</small><b id="hud-q">0/10</b><div class="conn" id="hud-conn"><i></i><span>Online</span></div></div>
+  </div>
+  <div class="banner" id="p-banner">Koneksi ke host terputus — mencoba lagi…</div>
+
+  <div class="qsheet" id="qsheet">
+    <div class="qhead"><span id="q-num">RINTANGAN 1/10</span><span id="q-time">20s</span></div>
+    <div class="qtimer"><div id="q-bar"></div></div>
+    <div class="qtext" id="q-text"></div>
+    <div class="qopts" id="q-opts"></div>
+    <div class="qfb" id="q-fb"><h3 id="q-fb-title"></h3><p id="q-fb-exp"></p><button class="btn" id="q-next">Lanjut lari ▶</button></div>
+  </div>
+
+  <div class="overlay" id="p-done">
+    <div class="card">
+      <div style="font-size:48px">🏁</div>
+      <h2>Finish!</h2>
+      <div class="big" id="pd-score">0</div>
+      <p class="muted" id="pd-info"></p>
+      <div class="spinner" style="width:28px;height:28px;border-width:3px;margin-top:16px"></div>
+      <p class="muted" style="font-size:13px">Menunggu peserta lain &amp; leaderboard…</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAYER: BOARD ============ -->
+<section class="screen pcenter" id="p-board">
+  <div class="card">
+    <div class="muted" style="font-weight:700">Peringkat kamu</div>
+    <div class="myrank" id="pb-rank">#1</div>
+    <div class="muted" id="pb-of" style="margin-bottom:6px"></div>
+    <div style="font-size:22px;font-weight:800"><span id="pb-score"></span> poin · <span id="pb-correct"></span>/10 benar</div>
+    <div class="rank-list" id="pb-top" style="margin-top:16px;text-align:left"></div>
+  </div>
+</section>
+
+<div class="countdown" id="countdown"><span>3</span></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   KONFIGURASI — ubah sesuai kebutuhan
+   ========================================================= */
+const CONFIG = {
+  START_SCORE: 50,     // poin awal
+  CORRECT: 10,         // poin jawaban benar
+  WRONG: -5,           // poin jawaban salah / waktu habis
+  MAX_PLAYERS: 20,
+  QUESTION_TIME: 20,   // detik per soal
+  // Jika peserta beda jaringan & sering gagal konek, tambahkan TURN server di sini, contoh:
+  // { urls: 'turn:turn.contoh.com:3478', username: 'user', credential: 'pass' }
+  ICE_SERVERS: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' }
+  ]
+};
+
+/* =========================================================
+   BANK SOAL — answer = index jawaban benar (0 = opsi pertama)
+   ========================================================= */
+const QUESTIONS = [
+  { q: "PT Maju membeli mesin produksi baru senilai Rp2 miliar secara tunai. Di bagian mana transaksi ini dilaporkan pada Laporan Arus Kas?",
+    options: ["Arus kas dari aktivitas operasi", "Arus kas dari aktivitas investasi", "Arus kas dari aktivitas pendanaan", "Tidak dilaporkan di laporan arus kas"],
+    answer: 1,
+    exp: "Pembelian aset tetap adalah keputusan investasi jangka panjang, sehingga kas keluarnya masuk aktivitas investasi. Di laporan posisi keuangan, aset tetap naik dan kas turun." },
+  { q: "RUPS memutuskan membagikan dividen tunai kepada pemegang saham. Bagaimana dampaknya pada laporan keuangan?",
+    options: ["Beban dividen di laporan laba rugi bertambah", "Saldo laba berkurang dan pembayarannya tercatat di arus kas pendanaan", "Pendapatan perusahaan berkurang", "Utang usaha bertambah"],
+    answer: 1,
+    exp: "Dividen adalah pembagian laba kepada pemilik, bukan beban. Dividen mengurangi saldo laba di laporan perubahan ekuitas, dan pembayarannya umumnya disajikan di aktivitas pendanaan." },
+  { q: "Untuk membiayai ekspansi pabrik, perusahaan menerbitkan obligasi berjangka 5 tahun. Apa dampaknya pada Laporan Posisi Keuangan?",
+    options: ["Kas naik dan liabilitas jangka panjang naik", "Kas naik dan ekuitas naik", "Aset tetap naik dan pendapatan naik", "Kas turun dan liabilitas turun"],
+    answer: 0,
+    exp: "Obligasi adalah utang. Saat diterbitkan, perusahaan menerima kas dan mencatat utang obligasi sebagai liabilitas jangka panjang. Penerimaan kasnya masuk aktivitas pendanaan." },
+  { q: "Perusahaan menjual produk kepada distributor dengan pembayaran 30 hari kemudian. Apa yang dicatat saat penjualan terjadi?",
+    options: ["Kas bertambah dan pendapatan bertambah", "Piutang usaha bertambah dan pendapatan bertambah", "Utang usaha bertambah dan persediaan bertambah", "Belum dicatat sampai kas diterima"],
+    answer: 1,
+    exp: "Dengan basis akrual, pendapatan diakui saat barang diserahkan, bukan saat kas diterima. Hak tagih kepada distributor dicatat sebagai piutang usaha." },
+  { q: "Manajemen mencatat beban penyusutan gedung kantor untuk tahun berjalan. Pernyataan mana yang benar?",
+    options: ["Penyusutan mengurangi saldo kas perusahaan", "Penyusutan adalah beban di laba rugi, tetapi tidak mengeluarkan kas", "Penyusutan dicatat di arus kas pendanaan", "Penyusutan menambah nilai buku aset tetap"],
+    answer: 1,
+    exp: "Penyusutan mengalokasikan biaya aset selama umur manfaatnya. Ia mengurangi laba dan nilai buku aset, tetapi bukan pengeluaran kas — karena itu ditambahkan kembali pada arus kas operasi metode tidak langsung." },
+  { q: "Pembayaran gaji karyawan bagian produksi dan administrasi bulan ini termasuk arus kas dari aktivitas apa?",
+    options: ["Aktivitas operasi", "Aktivitas investasi", "Aktivitas pendanaan", "Bukan arus kas"],
+    answer: 0,
+    exp: "Gaji adalah bagian dari kegiatan utama sehari-hari perusahaan dalam menghasilkan pendapatan, sehingga dilaporkan di arus kas aktivitas operasi." },
+  { q: "Perusahaan memutuskan membeli kembali sahamnya sendiri dari pasar (buyback). Bagaimana pengaruhnya pada laporan keuangan?",
+    options: ["Aset investasi bertambah", "Ekuitas berkurang (saham treasuri) dan kas keluar di aktivitas pendanaan", "Pendapatan lain-lain bertambah", "Liabilitas bertambah"],
+    answer: 1,
+    exp: "Saham yang dibeli kembali dicatat sebagai saham treasuri, pengurang ekuitas — bukan aset. Transaksi dengan pemilik seperti ini termasuk aktivitas pendanaan." },
+  { q: "Perusahaan membeli bahan baku dari pemasok secara kredit. Apa dampaknya pada Laporan Posisi Keuangan?",
+    options: ["Persediaan naik dan utang usaha naik", "Persediaan naik dan kas turun", "Beban pokok penjualan langsung naik", "Piutang usaha naik"],
+    answer: 0,
+    exp: "Bahan baku dicatat sebagai persediaan (aset), dan kewajiban membayar pemasok dicatat sebagai utang usaha (liabilitas). Kas belum berubah sampai utang dibayar." },
+  { q: "Perusahaan menghadapi gugatan hukum yang hasilnya belum pasti dan jumlahnya belum dapat diestimasi secara andal. Di mana informasi ini disajikan?",
+    options: ["Laporan laba rugi sebagai beban", "Laporan arus kas", "Catatan atas Laporan Keuangan sebagai liabilitas kontinjensi", "Tidak perlu diungkapkan"],
+    answer: 2,
+    exp: "Kewajiban yang belum pasti dan tidak dapat diukur andal tidak diakui sebagai liabilitas, tetapi wajib diungkapkan di Catatan atas Laporan Keuangan (CALK) sebagai liabilitas kontinjensi." },
+  { q: "Perusahaan menjual gedung lama dengan harga di atas nilai bukunya. Bagaimana pencatatannya?",
+    options: ["Selisihnya diakui sebagai keuntungan di laba rugi; kas masuk di aktivitas investasi", "Seluruh hasil penjualan dicatat sebagai pendapatan usaha", "Selisihnya langsung menambah modal saham", "Kas masuk dicatat di aktivitas operasi"],
+    answer: 0,
+    exp: "Penjualan aset tetap bukan kegiatan usaha utama. Selisih harga jual di atas nilai buku diakui sebagai keuntungan (pendapatan lain-lain), dan kas yang diterima masuk aktivitas investasi." }
+];
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const N = QUESTIONS.length;
+const PREFIX = 'larikuis-v1-';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function show(id){ document.querySelectorAll('.screen').forEach(e => e.classList.toggle('active', e.id === id)); }
+let toastT;
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
+function genCode(len = 6){ const a = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < len; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+function rid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+function color(i){ return `hsl(${Math.round(i * 137.508) % 360} 80% 60%)`; }
+function shuffle(a){ a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function fmtTime(ms){ if (ms == null) return '—'; const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function send(conn, obj){ try { if (conn && conn.open) conn.send(obj); } catch (e) {} }
+function peerOpts(){ return { debug: 1, config: { iceServers: CONFIG.ICE_SERVERS } }; }
+function baseUrl(){ return location.href.split('#')[0].split('?')[0]; }
+function joinUrl(code){ return baseUrl() + '?join=' + code; }
+function store(kind, k, v){ try { const s = kind === 'l' ? localStorage : sessionStorage; if (v === undefined) return s.getItem(k); s.setItem(k, v); } catch (e) { return null; } }
+
+function countdown(ms, done){
+  const el = $('#countdown');
+  let n = Math.ceil(ms / 1000);
+  if (n <= 0) { done(); return; }
+  el.classList.add('show');
+  const tick = () => {
+    el.innerHTML = `<span>${n > 0 ? n : 'GO!'}</span>`;
+    if (n < 0) { el.classList.remove('show'); done(); return; }
+    n--; setTimeout(tick, n < 0 ? 600 : 1000);
+  };
+  // align first tick to remaining fraction
+  const first = ms - (n - 1) * 1000;
+  el.innerHTML = `<span>${n}</span>`; n--;
+  setTimeout(tick, Math.max(0, first));
+}
+
+/* =========================================================
+   HOST
+   ========================================================= */
+const H = { peer: null, code: '', players: [], phase: 'lobby', startAt: 0, lanes: new Map(), ending: null };
+
+function hostCreate(){
+  show('host-lobby');
+  $('#hl-status').textContent = '⏳ Menyiapkan room…';
+  if (location.protocol === 'file:') $('#hl-filewarn').style.display = 'block';
+  if (typeof Peer === 'undefined') { $('#hl-status').textContent = '⚠️ Library jaringan gagal dimuat (cek internet)'; return; }
+  if (H.peer) { try { H.peer.destroy(); } catch (e) {} }
+  H.code = genCode();
+  const peer = new Peer(PREFIX + H.code, peerOpts());
+  H.peer = peer;
+  peer.on('open', () => {
+    $('#hl-code').textContent = H.code;
+    $('#hl-status').textContent = '🟢 Room siap';
+    const url = joinUrl(H.code);
+    $('#hl-url').textContent = url;
+    const box = $('#hl-qr'); box.innerHTML = '';
+    if (window.QRCode) new QRCode(box, { text: url, width: 240, height: 240, colorDark: '#0b1020', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+    else box.innerHTML = '<p style="color:#111;padding:20px">QR gagal dimuat — gunakan kode di atas.</p>';
+  });
+  peer.on('connection', conn => {
+    conn.on('data', d => hostOnData(conn, d));
+    conn.on('close', () => hostOnClose(conn));
+    conn.on('error', () => hostOnClose(conn));
+  });
+  peer.on('disconnected', () => { if (!peer.destroyed) { $('#hl-status').textContent = '🟠 Menyambung ulang…'; peer.reconnect(); } });
+  peer.on('error', e => {
+    if (e.type === 'unavailable-id') { hostCreate(); return; }
+    if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type)) toast('Koneksi ke server sinyal terganggu, mencoba lagi…');
+    else console.warn('peer error', e.type, e);
+  });
+}
+
+function lobbyList(){ return H.players.map(p => ({ name: p.name, color: p.color, online: p.online })); }
+function hostBroadcast(obj){ H.players.forEach(p => send(p.conn, obj)); }
+
+function hostOnData(conn, d){
+  if (!d || typeof d !== 'object') return;
+  if (d.t === 'join') {
+    const pid = String(d.pid || '').slice(0, 64);
+    let name = String(d.name || '').trim().slice(0, 20) || 'Peserta';
+    if (!pid) return;
+    let p = H.players.find(x => x.pid === pid);
+    if (p) {
+      if (p.conn && p.conn !== conn) { try { p.conn.close(); } catch (e) {} }
+      p.conn = conn; p.online = true; clearTimeout(p.dropT);
+    } else {
+      if (H.players.length >= CONFIG.MAX_PLAYERS) { send(conn, { t: 'full' }); setTimeout(() => { try { conn.close(); } catch (e) {} }, 800); return; }
+      const base = name; let k = 2;
+      while (H.players.some(x => x.name.toLowerCase() === name.toLowerCase())) name = base + ' ' + (k++);
+      p = { pid, name, conn, online: true, score: CONFIG.START_SCORE, answers: {}, answered: 0, correct: 0, done: false, finishMs: null, color: color(H.players.length) };
+      H.players.push(p);
+    }
+    conn._pid = pid;
+    send(conn, {
+      t: 'welcome', name: p.name, color: p.color, phase: H.phase,
+      answered: p.answered, score: p.score, answers: p.answers,
+      players: lobbyList(),
+      startIn: H.phase === 'race' ? Math.max(0, H.startAt - Date.now()) : 0,
+      board: H.phase === 'end' ? boardFor(p) : null
+    });
+    hostBroadcast({ t: 'lobby', players: lobbyList() });
+    renderHost();
+    return;
+  }
+  const p = H.players.find(x => x.pid === conn._pid);
+  if (!p) return;
+  if (d.t === 'answer') {
+    if (H.phase !== 'race') return;
+    const qi = d.qi | 0;
+    if (qi < 0 || qi >= N) return;
+    if (p.answers[qi] !== undefined) { send(conn, { t: 'result', qi, correct: p.answers[qi], score: p.score }); return; }
+    const ok = d.choice === QUESTIONS[qi].answer;
+    p.answers[qi] = ok; p.answered++; if (ok) p.correct++;
+    p.score += ok ? CONFIG.CORRECT : CONFIG.WRONG;
+    if (p.answered >= N && !p.done) { p.done = true; p.finishMs = Math.max(0, Date.now() - H.startAt); }
+    send(conn, { t: 'result', qi, correct: ok, score: p.score });
+    renderHost();
+    if (H.players.length && H.players.every(x => x.done)) { clearTimeout(H.ending); H.ending = setTimeout(hostEnd, 2500); }
+  }
+}
+
+function hostOnClose(conn){
+  const p = H.players.find(x => x.pid === conn._pid);
+  if (!p || p.conn !== conn) return;
+  p.online = false;
+  if (H.phase === 'lobby') {
+    // keluarkan dari lobi bila tidak kembali dalam 20 detik
+    p.dropT = setTimeout(() => {
+      if (!p.online && H.phase === 'lobby') {
+        H.players = H.players.filter(x => x !== p);
+        H.players.forEach((x, i) => x.color = color(i));
+        hostBroadcast({ t: 'lobby', players: lobbyList() });
+        renderHost();
+      }
+    }, 20000);
+  }
+  hostBroadcast({ t: 'lobby', players: lobbyList() });
+  renderHost();
+}
+
+function hostStartGame(){
+  if (!H.players.length) { toast('Belum ada peserta'); return; }
+  H.phase = 'race';
+  H.startAt = Date.now() + 4000;
+  H.players.forEach(p => { p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; });
+  hostBroadcast({ t: 'start', startIn: 4000 });
+  $('#hr-code').textContent = H.code;
+  $('#hr-lanes').innerHTML = ''; H.lanes.clear();
+  show('host-race'); renderHost();
+  countdown(4000, () => {});
+}
+
+function ranking(){
+  return [...H.players].sort((a, b) =>
+    b.score - a.score ||
+    b.correct - a.correct ||
+    (a.done !== b.done ? (a.done ? -1 : 1) : (a.finishMs ?? 1e15) - (b.finishMs ?? 1e15)));
+}
+function boardFor(p){
+  const r = ranking();
+  return { rank: r.indexOf(p) + 1, total: r.length, score: p.score, correct: p.correct,
+    top: r.slice(0, 10).map(x => ({ name: x.name, score: x.score, color: x.color, me: x === p })) };
+}
+
+function hostEnd(){
+  if (H.phase !== 'race') return;
+  clearTimeout(H.ending);
+  H.phase = 'end';
+  H.players.forEach(p => send(p.conn, Object.assign({ t: 'end' }, boardFor(p))));
+  renderBoard();
+  show('host-board');
+}
+
+function hostAgain(){
+  H.phase = 'lobby';
+  H.players = H.players.filter(p => p.online);
+  H.players.forEach((p, i) => { p.color = color(i); p.score = CONFIG.START_SCORE; p.answers = {}; p.answered = 0; p.correct = 0; p.done = false; p.finishMs = null; });
+  hostBroadcast({ t: 'reset', players: lobbyList() });
+  show('host-lobby'); renderHost();
+}
+
+function renderHost(){
+  // lobby
+  $('#hl-count').textContent = H.players.length;
+  $('#btn-start').disabled = H.players.length === 0;
+  $('#hl-players').innerHTML = H.players.length
+    ? H.players.map(p => `<span class="chip ${p.online ? '' : 'off'}"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</span>`).join('')
+    : '<span class="muted">Menunggu peserta bergabung…</span>';
+  if (H.phase === 'lobby') return;
+  // race lanes (update in place agar animasi mulus)
+  const lanesEl = $('#hr-lanes');
+  H.players.forEach(p => {
+    let el = H.lanes.get(p.pid);
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'lane';
+      el.innerHTML = `<div class="lane-name"><span class="dot"></span><span class="nm"></span></div><div class="lane-track"><div class="lane-runner"><i></i><span>🏃</span></div></div><div class="lane-score"></div>`;
+      lanesEl.appendChild(el); H.lanes.set(p.pid, el);
+    }
+    el.classList.toggle('off', !p.online);
+    el.querySelector('.dot').style.background = p.color;
+    el.querySelector('.nm').textContent = p.name;
+    const r = el.querySelector('.lane-runner');
+    r.style.setProperty('--c', p.color);
+    r.style.left = (3 + (p.answered / N) * 93) + '%';
+    r.querySelector('span').textContent = p.done ? '🏁' : '🏃';
+    el.querySelector('.lane-score').textContent = p.score;
+  });
+  const done = H.players.filter(p => p.done).length;
+  $('#hr-done').textContent = `${done}/${H.players.length} finish`;
+  $('#hr-rank').innerHTML = ranking().map((p, i) =>
+    `<div class="rank-row"><span class="n">${i + 1}</span><span style="display:flex;align-items:center;gap:8px;overflow:hidden"><span class="dot" style="background:${p.color}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</span>${p.done ? ' 🏁' : ''}</span><b>${p.score}</b></div>`).join('');
+}
+
+function renderBoard(){
+  const r = ranking();
+  const order = [1, 0, 2].filter(i => r[i]);
+  $('#hb-podium').innerHTML = order.map(i => `<div class="pod p${i + 1}"><div class="nm">${esc(r[i].name)}</div><div class="sc">${r[i].score}</div><div class="bar">${i + 1}</div></div>`).join('');
+  $('#hb-table').innerHTML = r.map((p, i) => `<tr><td><b>${i + 1}</b></td><td><span class="dot" style="background:${p.color};margin-right:8px"></span>${esc(p.name)}</td><td class="num">${p.correct}/${N}</td><td class="num">${p.done ? fmtTime(p.finishMs) : 'belum finish'}</td><td class="num"><b style="font-size:18px">${p.score}</b></td></tr>`).join('');
+}
+
+function downloadCsv(){
+  const rows = [['Peringkat', 'Nama', 'Benar', 'Salah', 'Waktu', 'Skor']];
+  ranking().forEach((p, i) => rows.push([i + 1, p.name, p.correct, p.answered - p.correct, p.done ? fmtTime(p.finishMs) : '-', p.score]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
+  a.download = `leaderboard-larikuis-${H.code}.csv`;
+  a.click();
+}
+
+/* =========================================================
+   PLAYER
+   ========================================================= */
+const P = { peer: null, conn: null, code: '', pid: '', name: '', color: '#fbbf24', phase: 'join',
+  qi: 0, score: CONFIG.START_SCORE, results: {}, outbox: [], joined: false, retryT: null };
+
+function playerJoin(code, name){
+  P.code = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  P.name = name;
+  if (P.code.length < 4) { toast('Kode game tidak valid'); return; }
+  if (!name) { toast('Isi nama dulu'); $('#name-input').focus(); return; }
+  store('l', 'larikuis-name', name);
+  P.pid = store('s', 'larikuis-pid-' + P.code) || rid();
+  store('s', 'larikuis-pid-' + P.code, P.pid);
+  history.replaceState(null, '', '?join=' + P.code);
+  pcStatus('Menghubungkan…', 'Menghubungi host game ' + P.code, false);
+  show('p-connect');
+  if (typeof Peer === 'undefined') { pcStatus('Gagal memuat', 'Library jaringan gagal dimuat. Cek koneksi internet lalu muat ulang.', true); return; }
+  if (P.peer) { try { P.peer.destroy(); } catch (e) {} }
+  P.joined = false;
+  const peer = new Peer(peerOpts());
+  P.peer = peer;
+  peer.on('open', () => playerConnect());
+  peer.on('disconnected', () => { if (!peer.destroyed) setTimeout(() => { try { peer.reconnect(); } catch (e) {} }, 1000); });
+  peer.on('error', e => {
+    if (e.type === 'peer-unavailable') {
+      if (!P.joined) pcStatus('Kode tidak ditemukan', 'Game dengan kode ' + P.code + ' tidak aktif. Periksa kodenya atau minta host membuka ulang.', true);
+      else scheduleRetry();
+    } else if (['network', 'server-error', 'socket-error', 'socket-closed'].includes(e.type)) {
+      setConn(false); scheduleRetry();
+    } else console.warn('peer error', e.type, e);
+  });
+}
+
+function playerConnect(){
+  if (P.conn && P.conn.open) return;
+  const conn = P.peer.connect(PREFIX + P.code, { reliable: true });
+  P.conn = conn;
+  conn.on('open', () => { setConn(true); send(conn, { t: 'join', pid: P.pid, name: P.name }); });
+  conn.on('data', playerOnData);
+  const lost = () => { if (P.conn === conn) { setConn(false); scheduleRetry(); } };
+  conn.on('close', lost);
+  conn.on('error', lost);
+  setTimeout(() => {
+    if (P.conn === conn && !conn.open) {
+      if (!P.joined) pcStatus('Tidak bisa terhubung', 'Koneksi ke host gagal. Pastikan HP dan host terhubung internet (lebih baik di Wi-Fi yang sama), lalu coba lagi.', true);
+      else scheduleRetry();
+    }
+  }, 15000);
+}
+
+function scheduleRetry(){
+  clearTimeout(P.retryT);
+  P.retryT = setTimeout(() => {
+    if (P.conn && P.conn.open) return;
+    if (P.peer && !P.peer.destroyed) {
+      if (P.peer.disconnected) { try { P.peer.reconnect(); } catch (e) {} }
+      else playerConnect();
+    }
+    scheduleRetry();
+  }, 3000);
+}
+
+function setConn(on){
+  const c = $('#hud-conn'); c.classList.toggle('off', !on); c.querySelector('span').textContent = on ? 'Online' : 'Offline';
+  $('#p-banner').classList.toggle('show', !on && P.joined && P.phase === 'race');
+  if (on) clearTimeout(P.retryT);
+}
+
+function pcStatus(title, msg, failed){
+  $('#pc-title').textContent = title; $('#pc-msg').textContent = msg;
+  $('#pc-back').style.display = failed ? 'inline-block' : 'none';
+  document.querySelector('#p-connect .spinner').style.display = failed ? 'none' : 'block';
+}
+
+function flushOutbox(){ P.outbox.forEach(o => send(P.conn, o)); }
+
+function playerOnData(d){
+  if (!d || typeof d !== 'object') return;
+  switch (d.t) {
+    case 'welcome':
+      P.joined = true; P.name = d.name; P.color = d.color;
+      setConn(true);
+      if (d.phase === 'lobby') { P.phase = 'lobby'; renderWait(d.players); show('p-wait'); }
+      else if (d.phase === 'race') {
+        if (P.phase === 'race' || P.phase === 'done') flushOutbox();
+        else {
+          // bergabung terlambat atau memuat ulang halaman
+          P.qi = d.answered; P.score = d.score; P.results = {};
+          Object.keys(d.answers || {}).forEach(k => P.results[k] = d.answers[k]);
+          P.outbox = [];
+          startRace(d.startIn);
+        }
+      } else if (d.phase === 'end' && d.board) showPlayerBoard(d.board);
+      break;
+    case 'lobby':
+      if (P.phase === 'lobby') renderWait(d.players);
+      break;
+    case 'full':
+      P.joined = false; pcStatus('Game penuh', 'Peserta sudah mencapai batas ' + CONFIG.MAX_PLAYERS + ' orang.', true); show('p-connect');
+      break;
+    case 'start':
+      P.qi = 0; P.score = CONFIG.START_SCORE; P.results = {}; P.outbox = [];
+      startRace(d.startIn);
+      break;
+    case 'result':
+      P.outbox = P.outbox.filter(o => o.qi !== d.qi);
+      if (d.qi === P.qi - 1 && typeof d.score === 'number') { P.score = d.score; updateHud(); }
+      break;
+    case 'end':
+      showPlayerBoard(d);
+      break;
+    case 'reset':
+      G.stop(); closeQuestion(true);
+      P.phase = 'lobby'; P.qi = 0; P.score = CONFIG.START_SCORE; P.results = {}; P.outbox = [];
+      $('#p-done').classList.remove('show');
+      renderWait(d.players); show('p-wait');
+      break;
+  }
+}
+
+function renderWait(players){
+  $('#pw-name').textContent = P.name;
+  const av = $('#pw-avatar'); av.style.background = P.color;
+  $('#pw-count').textContent = players.length;
+  $('#pw-players').innerHTML = players.map(p => `<span class="chip ${p.online ? '' : 'off'}" style="font-size:13px;padding:6px 11px"><span class="dot" style="background:${p.color}"></span>${esc(p.name)}</span>`).join('');
+}
+
+function startRace(startIn){
+  P.phase = 'race';
+  $('#p-done').classList.remove('show');
+  closeQuestion(true);
+  show('p-game');
+  G.init();
+  updateHud();
+  if (P.qi >= N) { finishRace(); return; }
+  countdown(startIn, () => G.run());
+}
+
+function updateHud(){
+  $('#hud-score').textContent = P.score;
+  $('#hud-q').textContent = Math.min(P.qi, N) + '/' + N;
+  let h = '';
+  for (let i = 0; i < N; i++) h += `<span class="pip ${P.results[i] === true ? 'ok' : P.results[i] === false ? 'bad' : ''}"></span>`;
+  $('#hud-pips').innerHTML = h;
+}
+
+function floatDelta(text, ok){
+  const d = document.createElement('div');
+  d.className = 'delta'; d.textContent = text; d.style.color = ok ? 'var(--ok)' : 'var(--bad)';
+  $('#p-game').appendChild(d); setTimeout(() => d.remove(), 1300);
+}
+
+/* ---------- Pertanyaan ---------- */
+let Q = { qi: -1, timer: null, auto: null, answered: false, start: 0 };
+
+function openQuestion(qi){
+  const q = QUESTIONS[qi];
+  Q = { qi, timer: null, auto: null, answered: false, start: performance.now() };
+  $('#q-num').textContent = `RINTANGAN ${qi + 1}/${N}`;
+  $('#q-text').textContent = q.q;
+  const order = shuffle(q.options.map((_, i) => i));
+  $('#q-opts').innerHTML = order.map((oi, k) => `<button class="opt" data-i="${oi}"><b>${'ABCD'[k] || k + 1}</b><span>${esc(q.options[oi])}</span></button>`).join('');
+  $('#q-opts').querySelectorAll('.opt').forEach(b => b.onclick = () => answerQuestion(+b.dataset.i));
+  $('#q-fb').classList.remove('show');
+  $('#q-bar').style.width = '100%';
+  $('#q-time').textContent = CONFIG.QUESTION_TIME + 's';
+  $('#qsheet').classList.add('show');
+  $('#qsheet').scrollTop = 0;
+  Q.timer = setInterval(() => {
+    const left = CONFIG.QUESTION_TIME - (performance.now() - Q.start) / 1000;
+    $('#q-bar').style.width = Math.max(0, left / CONFIG.QUESTION_TIME * 100) + '%';
+    $('#q-time').textContent = Math.max(0, Math.ceil(left)) + 's';
+    if (left <= 0) answerQuestion(-1);
+  }, 100);
+}
+
+function answerQuestion(choice){
+  if (Q.answered) return;
+  Q.answered = true;
+  clearInterval(Q.timer);
+  const qi = Q.qi, q = QUESTIONS[qi];
+  const ok = choice === q.answer;
+  $('#q-opts').querySelectorAll('.opt').forEach(b => {
+    b.disabled = true;
+    const i = +b.dataset.i;
+    if (i === q.answer) b.classList.add('ok');
+    else if (i === choice) b.classList.add('bad');
+  });
+  P.results[qi] = ok;
+  P.score += ok ? CONFIG.CORRECT : CONFIG.WRONG; // optimis; dikoreksi oleh host
+  P.qi = qi + 1;
+  const msg = { t: 'answer', qi, choice };
+  P.outbox.push(msg); send(P.conn, msg);
+  updateHud();
+  $('#q-fb-title').innerHTML = ok
+    ? `<span style="color:var(--ok)">✅ Benar! +${CONFIG.CORRECT}</span>`
+    : `<span style="color:var(--bad)">${choice < 0 ? '⏰ Waktu habis' : '❌ Salah'} ${CONFIG.WRONG}</span>`;
+  $('#q-fb-exp').textContent = q.exp || '';
+  $('#q-fb').classList.add('show');
+  setTimeout(() => $('#q-fb').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  let n = 8;
+  const nb = $('#q-next');
+  nb.textContent = `Lanjut lari ▶ (${n})`;
+  Q.auto = setInterval(() => { n--; nb.textContent = `Lanjut lari ▶ (${n})`; if (n <= 0) continueRun(); }, 1000);
+  Q.ok = ok;
+}
+
+function continueRun(){
+  if (!Q.answered) return;
+  const ok = Q.ok;
+  closeQuestion();
+  floatDelta(ok ? '+' + CONFIG.CORRECT : String(CONFIG.WRONG), ok);
+  G.resume(ok);
+}
+
+function closeQuestion(silent){
+  clearInterval(Q.timer); clearInterval(Q.auto);
+  $('#qsheet').classList.remove('show');
+}
+
+function finishRace(){
+  P.phase = 'done';
+  const correct = Object.values(P.results).filter(v => v === true).length;
+  $('#pd-score').textContent = P.score;
+  $('#pd-info').textContent = `${correct} dari ${N} jawaban benar`;
+  $('#p-done').classList.add('show');
+}
+
+function showPlayerBoard(b){
+  G.stop(); closeQuestion(true);
+  P.phase = 'end';
+  $('#pb-rank').textContent = '#' + b.rank;
+  $('#pb-of').textContent = 'dari ' + b.total + ' peserta';
+  $('#pb-score').textContent = b.score;
+  $('#pb-correct').textContent = b.correct;
+  $('#pb-top').innerHTML = (b.top || []).map((p, i) =>
+    `<div class="rank-row" style="${p.me ? 'outline:2px solid var(--accent)' : ''}"><span class="n">${i + 1}</span><span style="display:flex;align-items:center;gap:8px;overflow:hidden"><span class="dot" style="background:${p.color}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}${p.me ? ' (kamu)' : ''}</span></span><b>${p.score}</b></div>`).join('');
+  show('p-board');
+}
+
+/* =========================================================
+   RUNNER (canvas)
+   ========================================================= */
+const G = {
+  cv: null, ctx: null, w: 0, h: 0, dpr: 1, raf: 0, last: 0,
+  state: 'idle', dist: 0, speed: 0, t: 0,
+  obs: null, finishX: null, jumpY: 0, vy: 0, trip: 0, fx: [],
+
+  init(){
+    this.cv = $('#cv'); this.ctx = this.cv.getContext('2d');
+    this.resize();
+    if (!this._bound) { window.addEventListener('resize', () => this.resize()); this._bound = true; }
+    this.dist = 0; this.t = 0; this.jumpY = 0; this.vy = 0; this.trip = 0; this.fx = [];
+    this.obs = null; this.finishX = null; this.state = 'idle';
+    this.spawnNext();
+    cancelAnimationFrame(this.raf);
+    this.last = performance.now();
+    this.raf = requestAnimationFrame(t => this.loop(t));
+  },
+  resize(){
+    if (!this.cv) return;
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.w = this.cv.clientWidth; this.h = this.cv.clientHeight;
+    this.cv.width = this.w * this.dpr; this.cv.height = this.h * this.dpr;
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    this.speed = Math.max(220, this.w * 0.55);
+  },
+  get runnerX(){ return this.w * 0.24; },
+  get groundY(){ return this.h * 0.68; },
+  spawnNext(){
+    const gap = this.speed * 2.6;
+    if (P.qi < N) this.obs = { x: this.dist + gap, qi: P.qi, asked: false, knocked: false };
+    else { this.obs = null; this.finishX = this.dist + gap * 0.9; }
+  },
+  run(){ if (this.state === 'idle') this.state = 'run'; },
+  resume(ok){
+    if (ok) { this.vy = -Math.max(520, this.h * 0.9); this.burst(); }
+    else { this.trip = 0.7; if (this.obs) this.obs.knocked = true; }
+    this.state = 'run';
+    this._pending = true;
+  },
+  stop(){ cancelAnimationFrame(this.raf); this.state = 'idle'; },
+  burst(){
+    for (let i = 0; i < 26; i++) this.fx.push({ x: this.runnerX, y: this.groundY - 60, vx: (Math.random() - .3) * 380, vy: -Math.random() * 420 - 80, life: 1, c: `hsl(${Math.random() * 360} 90% 60%)` });
+  },
+  loop(now){
+    const dt = Math.min(0.05, (now - this.last) / 1000); this.last = now;
+    this.t += dt;
+    if (this.state === 'run') {
+      this.dist += this.speed * dt * (this.trip > 0 ? 0.55 : 1);
+      if (this.trip > 0) this.trip -= dt;
+      // tanya saat rintangan tepat di depan pelari
+      if (this.obs && !this.obs.asked && this.obs.x - this.dist <= 46) {
+        this.obs.asked = true; this.state = 'question'; openQuestion(this.obs.qi);
+      }
+      // rintangan sudah terlewati → siapkan berikutnya
+      if (this.obs && this.obs.asked && this._pending && this.dist - this.obs.x > this.w * 0.4) {
+        this._pending = false; this.spawnNext();
+      }
+      if (this.finishX !== null && this.dist >= this.finishX) { this.state = 'finished'; finishRace(); }
+    } else if (this.state === 'finished') {
+      this.dist += this.speed * dt * 0.25;
+    }
+    // lompatan
+    if (this.vy !== 0 || this.jumpY < 0) {
+      this.vy += Math.max(1500, this.h * 2.6) * dt;
+      this.jumpY += this.vy * dt;
+      if (this.jumpY >= 0) { this.jumpY = 0; this.vy = 0; }
+    }
+    this.fx.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 900 * dt; p.life -= dt * 0.9; });
+    this.fx = this.fx.filter(p => p.life > 0);
+    this.draw();
+    this.raf = requestAnimationFrame(t => this.loop(t));
+  },
+  draw(){
+    const c = this.ctx, w = this.w, h = this.h, gy = this.groundY, d = this.dist;
+    // langit
+    const sky = c.createLinearGradient(0, 0, 0, gy);
+    sky.addColorStop(0, '#1e1b4b'); sky.addColorStop(.55, '#6d28d9'); sky.addColorStop(1, '#fb923c');
+    c.fillStyle = sky; c.fillRect(0, 0, w, gy);
+    // matahari
+    c.fillStyle = 'rgba(253,224,71,.9)'; c.beginPath(); c.arc(w * 0.78, gy * 0.62, Math.min(w, h) * 0.09, 0, Math.PI * 2); c.fill();
+    // gunung jauh & bukit
+    this.hills(d * 0.08, gy, h * 0.22, 0.004, '#4c1d95', 0.7);
+    this.hills(d * 0.22, gy, h * 0.13, 0.009, '#3b0764', 1.3);
+    // rumput
+    c.fillStyle = '#166534'; c.fillRect(0, gy - 8, w, 14);
+    // lintasan
+    const tr = c.createLinearGradient(0, gy, 0, h);
+    tr.addColorStop(0, '#c2410c'); tr.addColorStop(1, '#7c2d12');
+    c.fillStyle = tr; c.fillRect(0, gy + 4, w, h - gy);
+    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 2;
+    [0.18, 0.48].forEach(f => { const y = gy + 4 + (h - gy) * f; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); });
+    // garis jarak bergerak
+    c.fillStyle = 'rgba(255,255,255,.25)';
+    const step = 120; for (let x = -(d % step); x < w; x += step) c.fillRect(x, gy + (h - gy) * 0.3, 40, 4);
+    // garis finish
+    if (this.finishX !== null) this.drawFinish(this.runnerX + (this.finishX - d));
+    // rintangan
+    if (this.obs) this.drawHurdle(this.runnerX + 40 + (this.obs.x - d) , gy, this.obs);
+    // pelari
+    this.drawRunner(this.runnerX, gy + this.jumpY);
+    // partikel
+    this.fx.forEach(p => { c.globalAlpha = Math.max(0, p.life); c.fillStyle = p.c; c.fillRect(p.x, p.y, 7, 7); });
+    c.globalAlpha = 1;
+  },
+  hills(off, base, amp, freq, col, k){
+    const c = this.ctx; c.fillStyle = col; c.beginPath(); c.moveTo(0, base);
+    for (let x = 0; x <= this.w + 10; x += 10) {
+      const X = x + off;
+      c.lineTo(x, base - amp * (0.55 + 0.3 * Math.sin(X * freq) + 0.15 * Math.sin(X * freq * 2.7 * k)));
+    }
+    c.lineTo(this.w, base); c.closePath(); c.fill();
+  },
+  drawHurdle(x, gy, o){
+    const c = this.ctx, hh = Math.max(46, this.h * 0.075), ww = 46;
+    if (x < -80 || x > this.w + 80) return;
+    c.lineCap = 'round';
+    if (o.knocked) {
+      c.save(); c.translate(x, gy - 6); c.rotate(-0.15);
+      c.fillStyle = '#fff'; c.fillRect(-ww / 2, -6, ww, 10);
+      c.fillStyle = '#ef4444'; for (let i = 0; i < 3; i++) c.fillRect(-ww / 2 + i * 16, -6, 8, 10);
+      c.restore();
+      return;
+    }
+    c.strokeStyle = '#e5e7eb'; c.lineWidth = 5;
+    c.beginPath(); c.moveTo(x - ww / 2, gy); c.lineTo(x - ww / 2, gy - hh); c.moveTo(x + ww / 2, gy); c.lineTo(x + ww / 2, gy - hh); c.stroke();
+    c.fillStyle = '#fff'; c.fillRect(x - ww / 2 - 3, gy - hh - 6, ww + 6, 12);
+    c.fillStyle = '#ef4444'; for (let i = 0; i < 4; i++) c.fillRect(x - ww / 2 - 3 + i * 14, gy - hh - 6, 7, 12);
+    if (!o.asked) {
+      const by = gy - hh - 46 + Math.sin(this.t * 4) * 5;
+      c.fillStyle = '#fbbf24'; this.rr(x - 20, by, 40, 34, 9); c.fill();
+      c.fillStyle = '#1a1203'; c.font = '800 24px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText('?', x, by + 18);
+      c.font = '700 11px "Plus Jakarta Sans",sans-serif'; c.fillStyle = '#fde68a';
+      c.fillText(`${o.qi + 1}/${N}`, x, by - 9);
+    }
+  },
+  drawFinish(x){
+    const c = this.ctx, gy = this.groundY, top = gy - this.h * 0.3;
+    if (x < -100 || x > this.w + 100) return;
+    c.fillStyle = '#e5e7eb'; c.fillRect(x - 4, top, 8, gy - top); c.fillRect(x + 90, top, 8, gy - top);
+    const sz = 10;
+    for (let i = 0; i < 10; i++) for (let j = 0; j < 3; j++) { c.fillStyle = (i + j) % 2 ? '#111' : '#fff'; c.fillRect(x + i * sz, top + j * sz, sz, sz); }
+    c.fillStyle = '#fff'; c.font = '800 16px "Plus Jakarta Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'bottom';
+    c.fillText('FINISH', x + 47, top - 6);
+    for (let k = 0; k < 6; k++) { c.fillStyle = (k % 2) ? '#111' : '#fff'; c.fillRect(x + k * 16, gy + 4, 16, 10); }
+  },
+  drawRunner(x, footY){
+    const c = this.ctx, s = Math.max(0.9, Math.min(1.4, this.h / 640));
+    const running = this.state === 'run' || this.state === 'finished';
+    const ph = running ? this.dist / 16 : this.t * 3;
+    const swing = running ? Math.sin(ph) : Math.sin(ph) * 0.15;
+    const air = this.jumpY < -2;
+    const hip = { x, y: footY - 34 * s }, neck = { x: x + 6 * s, y: footY - 70 * s };
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    // bayangan
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(x, this.groundY + 2, 22 * s * (1 + this.jumpY / 400), 5 * s, 0, 0, Math.PI * 2); c.fill();
+    const leg = (a, back) => {
+      const k = air ? (back ? -0.9 : 0.9) : a;
+      const knee = { x: hip.x + Math.sin(k) * 16 * s, y: hip.y + Math.cos(k) * 16 * s };
+      const foot = { x: knee.x + Math.sin(k - (back ? 0.9 : 0.2)) * 17 * s - (air ? 4 : 0), y: knee.y + Math.cos(k - 0.6) * 17 * s };
+      c.beginPath(); c.moveTo(hip.x, hip.y); c.lineTo(knee.x, knee.y); c.lineTo(foot.x, foot.y); c.stroke();
+    };
+    const arm = (a) => {
+      const sh = { x: neck.x, y: neck.y + 6 * s };
+      const el = { x: sh.x + Math.sin(a) * 13 * s, y: sh.y + Math.cos(a) * 13 * s };
+      const hd = { x: el.x + Math.sin(a + 1.4) * 12 * s, y: el.y + Math.cos(a + 1.4) * 12 * s };
+      c.beginPath(); c.moveTo(sh.x, sh.y); c.lineTo(el.x, el.y); c.lineTo(hd.x, hd.y); c.stroke();
+    };
+    const flash = this.trip > 0 && Math.floor(this.t * 14) % 2 === 0;
+    const body = flash ? '#ef4444' : P.color;
+    // anggota belakang (gelap)
+    c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 8 * s;
+    leg(-swing * 0.9, true); arm(swing * 1.1);
+    c.strokeStyle = body; c.lineWidth = 7 * s;
+    leg(-swing * 0.9, true); arm(swing * 1.1);
+    // badan
+    c.lineWidth = 11 * s; c.beginPath(); c.moveTo(hip.x, hip.y); c.lineTo(neck.x, neck.y); c.stroke();
+    // anggota depan
+    c.lineWidth = 7 * s; c.strokeStyle = body; leg(swing * 0.9, false); arm(-swing * 1.1);
+    // kepala
+    c.fillStyle = '#fde3c4'; c.beginPath(); c.arc(neck.x + 3 * s, neck.y - 12 * s, 10 * s, 0, Math.PI * 2); c.fill();
+    c.fillStyle = body; c.fillRect(neck.x - 7 * s, neck.y - 22 * s, 20 * s, 5 * s);
+    // nomor dada
+    c.fillStyle = '#fff'; c.font = `800 ${9 * s}px "Plus Jakarta Sans",sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(String(Math.min(P.qi + (this.state === 'question' ? 1 : 0), N)), (hip.x + neck.x) / 2, (hip.y + neck.y) / 2);
+    // nama
+    c.font = `700 ${12 * s}px "Plus Jakarta Sans",sans-serif`; c.fillStyle = 'rgba(255,255,255,.9)';
+    c.fillText(P.name, x, footY - 98 * s);
+  },
+  rr(x, y, w, h, r){ const c = this.ctx; c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+};
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+$('#btn-host').onclick = hostCreate;
+$('#btn-start').onclick = hostStartGame;
+$('#btn-end').onclick = () => { if (confirm('Akhiri lomba sekarang dan tampilkan leaderboard?')) hostEnd(); };
+$('#btn-again').onclick = hostAgain;
+$('#btn-csv').onclick = downloadCsv;
+$('#btn-join').onclick = () => playerJoin($('#code-input').value.trim(), $('#name-input').value.trim());
+$('#name-input').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-join').click(); });
+$('#code-input').addEventListener('input', e => e.target.value = e.target.value.toUpperCase());
+$('#pc-back').onclick = () => { if (P.peer) try { P.peer.destroy(); } catch (e) {} history.replaceState(null, '', baseUrl()); show('home'); };
+$('#q-next').onclick = continueRun;
+window.addEventListener('beforeunload', e => { if (H.peer && H.phase !== 'end' && H.players.length) { e.preventDefault(); e.returnValue = ''; } });
+
+(function boot(){
+  const params = new URLSearchParams(location.search);
+  const code = (params.get('join') || '').toUpperCase();
+  const savedName = store('l', 'larikuis-name') || '';
+  $('#name-input').value = savedName;
+  if (code) {
+    $('#code-input').value = code;
+    // muat ulang halaman di tengah game → langsung sambung lagi
+    if (savedName && store('s', 'larikuis-pid-' + code)) { playerJoin(code, savedName); return; }
+    show('home'); setTimeout(() => $('#name-input').focus(), 100);
+  } else show('home');
+})();
+</script>
+</body>
+</html>
